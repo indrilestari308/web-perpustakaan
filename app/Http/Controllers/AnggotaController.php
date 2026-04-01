@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class AnggotaController extends Controller
 {
+    // 🔐 Middleware auth di constructor
+    public function __construct()
+    {
+        // Semua method hanya untuk user login
+        $this->middleware('auth');
+
+        // Opsional: jika ingin batasi hanya role anggota
+        // $this->middleware('role:anggota'); // nanti buat middleware role
+    }
+
     // DASHBOARD
     public function dashboard()
     {
@@ -46,22 +56,31 @@ class AnggotaController extends Controller
         return view('anggota.profil');
     }
 
-    // PINJAM BUKU 🔥 (FIX ERROR user_id NULL)
-    public function pinjam($id)
+    public function updateProfil(Request $request)
     {
-        // 🔥 CEK LOGIN
-        if (!Auth::check()) {
-            return redirect('/login')->with('error', 'Silakan login dulu!');
+        $user = auth()->user();
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->password) {
+            $user->password = bcrypt($request->password);
         }
 
+        $user->save();
+
+        return back()->with('success', 'Profil berhasil diperbarui');
+    }
+
+    // PINJAM BUKU
+    public function pinjam($id)
+    {
         $buku = Buku::findOrFail($id);
 
-        // 🔥 CEK STOK
         if ($buku->stok <= 0) {
             return back()->with('error', 'Stok buku habis!');
         }
 
-        // 🔥 SIMPAN PEMINJAMAN
         Peminjaman::create([
             'user_id' => Auth::id(),
             'buku_id' => $id,
@@ -69,13 +88,12 @@ class AnggotaController extends Controller
             'status' => 'dipinjam'
         ]);
 
-        // 🔥 KURANGI STOK
         $buku->decrement('stok');
 
         return back()->with('success', 'Buku berhasil dipinjam');
     }
 
-    // KEMBALIKAN BUKU 🔥
+    // KEMBALIKAN BUKU
     public function kembali($id)
     {
         $pinjam = Peminjaman::findOrFail($id);
@@ -85,7 +103,6 @@ class AnggotaController extends Controller
             'tanggal_kembali' => now()
         ]);
 
-        // tambah stok lagi
         $pinjam->buku->increment('stok');
 
         return back()->with('success', 'Buku berhasil dikembalikan');

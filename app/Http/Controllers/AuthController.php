@@ -3,75 +3,103 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // ================= LOGIN =================
-    public function showLogin()
-    {
-        return view('auth.login');
+    // =====================
+    // 🔐 LOGIN
+    // =====================
+
+    // tampil halaman login
+public function showLogin()
+{
+    if (Auth::check()) {
+        Auth::logout();
     }
 
+    return view('auth.login');
+
+    }
+
+    // proses login
     public function login(Request $request)
     {
-        // bisa login pakai email atau username
-        $login = $request->input('email'); // field dari form
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
 
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt([$field => $login, 'password' => $request->password])) {
-
+        if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
             // redirect berdasarkan role
-            if ($user->role == 'anggota') {
-                return redirect('/anggota/dashboard');
+            if ($user->role == 'kepala') {
+                return redirect()->route('kepala.dashboard');
             } elseif ($user->role == 'petugas') {
-                return redirect('/petugas/dashboard');
-            } elseif ($user->role == 'kepala') {
-                return redirect('/kepala/dashboard');
+                return redirect()->route('petugas.dashboard');
+            } else {
+                return redirect()->route('anggota.dashboard');
             }
         }
 
-        return back()->with('error', 'Email/Username atau password salah!');
+        return back()->with('error', 'Email atau password salah');
     }
 
-    // ================= REGISTER =================
+    // =====================
+    // 📝 REGISTER
+    // =====================
+
+    // tampil halaman register
     public function showRegister()
     {
+        // Jika user sudah login, redirect ke dashboard sesuai role
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->role == 'kepala') {
+                return redirect()->route('kepala.dashboard');
+            } elseif ($user->role == 'petugas') {
+                return redirect()->route('petugas.dashboard');
+            } else {
+                return redirect()->route('anggota.dashboard');
+            }
+        }
+
         return view('auth.register');
     }
 
     public function register(Request $request)
     {
-        // validasi
         $request->validate([
-            'name' => 'required',
-            'username' => 'required|unique:users',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:5'
+            'password' => 'required|min:6'
         ]);
 
-        // simpan user
-        User::create([
+        $user = User::create([
             'name' => $request->name,
-            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'anggota' // default
+            'role' => 'anggota'
         ]);
 
-        return redirect('/login')->with('success', 'Berhasil daftar!');
+        // Auto login setelah register
+        Auth::login($user);
+
+        return redirect()->route('anggota.dashboard');
     }
 
-    // ================= LOGOUT =================
+    // =====================
+    // 🚪 LOGOUT
+    // =====================
+
     public function logout()
     {
         Auth::logout();
-        return redirect('/');
+        return redirect('/login');
     }
 }

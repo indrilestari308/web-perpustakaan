@@ -6,7 +6,6 @@
 
 <div class="card-dashboard">
 
-    <h5 class="mb-3">Konfirmasi Peminjaman</h5>
 
     @if(session('success'))
         <div class="alert alert-success">

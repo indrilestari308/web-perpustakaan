@@ -47,7 +47,6 @@ public function store(Request $request)
         'penerbit' => $request->penerbit,
         'tahun_terbit' => $request->tahun_terbit,
         'stok' => $request->stok,
-        'status' => $request->status,
         'kategori_id' => $request->kategori_id,
         'gambar' => $gambar,
 
@@ -66,7 +65,7 @@ public function store(Request $request)
         $buku = Buku::findOrFail($id);
         $kategori = Kategori::all();
 
-        return view('petugas.buku.edit', compact('buku', 'kategoris'));
+        return view('petugas.buku.edit', compact('buku', 'kategori'));
     }
 
     // UPDATE

@@ -42,8 +42,22 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-    ],
 
+        'anggota' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'petugas' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'kepala' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+    ],
     /*
     |--------------------------------------------------------------------------
     | User Providers

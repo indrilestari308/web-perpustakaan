@@ -16,7 +16,7 @@
 <div class="container mt-4">
     <div class="form-box">
 
-        <h4 class="mb-4">📚 Tambah Buku</h4>
+
 
         {{-- ERROR VALIDATION --}}
         @if ($errors->any())
@@ -66,11 +66,6 @@
                     <input type="number" name="tahun_terbit" class="form-control" value="{{ old('tahun_terbit') }}">
                 </div>
 
-                {{-- STOK --}}
-                <div class="col-md-6 mb-3">
-                    <label>Stok</label>
-                    <input type="number" name="stok" class="form-control" value="{{ old('stok') }}">
-                </div>
 
                 {{-- STATUS --}}
                 <div class="col-md-6 mb-3">

@@ -4,6 +4,7 @@
 
 @section('content')
 
+
 <style>
     .detail-card {
         background: white;
@@ -25,6 +26,21 @@
         margin-bottom: 6px;
     }
 </style>
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show">
+        ✅ Permintaan peminjaman berhasil dikirim!
+        Silakan tunggu konfirmasi dari petugas.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+@if(session('info'))
+    <div class="alert alert-info alert-dismissible fade show">
+        ℹ️ Permintaan Anda sedang diproses oleh petugas.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
 
 <div class="detail-card text-center">
 

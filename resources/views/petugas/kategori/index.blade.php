@@ -6,7 +6,7 @@
 
 <div class="card-box">
 
-    <h5 class="mb-3">📚 Data Kategori</h5>
+    
 
     {{-- SUCCESS --}}
     @if (session('success'))

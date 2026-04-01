@@ -21,32 +21,9 @@ body {
     display: flex;
 }
 
-/* KIRI */
 .left-side {
     width: 320px;
-    position: relative;
     overflow: hidden;
-}
-
-/* LOGO */
-.logo-title {
-    position: absolute;
-    top: 25px;
-    left: 25px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 2;
-}
-
-.logo-title img {
-    height: 35px;
-}
-
-.logo-title span {
-    font-weight: bold;
-    color: #1b2a7a;
-    font-size: 20px;
 }
 
 .left-side img.bg {
@@ -55,7 +32,6 @@ body {
     object-fit: cover;
 }
 
-/* KANAN */
 .right-side {
     flex: 1;
     background: linear-gradient(135deg, #eaeaea, #6fd1c7);
@@ -64,7 +40,6 @@ body {
     align-items: center;
 }
 
-/* CARD */
 .login-wrapper {
     width: 100%;
     max-width: 420px;
@@ -91,37 +66,19 @@ body {
     border: 2px solid #ccc;
 }
 
-.form-control:focus {
-    border-color: #6fd1c7;
-    box-shadow: none;
-}
-
-/* BUTTON */
 .btn-login {
-    background: #f5b623;
+    background: #142c8e;
     border: none;
     border-radius: 15px;
     height: 50px;
     font-weight: bold;
     font-size: 18px;
     color: white;
-    transition: 0.3s;
 }
 
-.btn-login:hover {
-    background: #e0a315;
-}
-
-/* LINK */
-.register-text {
+.link-text {
     text-align: center;
     margin-top: 15px;
-}
-
-.register-text a {
-    color: #142c8e;
-    text-decoration: none;
-    font-weight: 500;
 }
     </style>
 </head>
@@ -132,7 +89,6 @@ body {
 
     <!-- KIRI -->
     <div class="left-side">
-
         <img src="{{ asset('img/login.jpeg') }}" class="bg">
     </div>
 
@@ -142,30 +98,39 @@ body {
         <div class="login-wrapper">
 
             <div class="title-login">
-                Silahkan Login
+                Login
             </div>
 
             <div class="login-card">
 
-                <form>
+                {{-- ERROR --}}
+                @if(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                {{-- FORM --}}
+                <form method="POST" action="/login">
+                    @csrf
 
                     <div class="mb-3">
-                        <label>Email / Username</label>
-                        <input type="text" class="form-control" placeholder="Masukkan email atau username">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="Masukkan email" required>
                     </div>
 
                     <div class="mb-3">
                         <label>Password</label>
-                        <input type="password" class="form-control" placeholder="Masukkan password">
+                        <input type="password" name="password" class="form-control" placeholder="Masukkan password" required>
                     </div>
 
-                    <button type="button" class="btn btn-login w-100">
+                    <button type="submit" class="btn btn-login w-100">
                         Login
                     </button>
 
                 </form>
 
-                <div class="register-text">
+                <div class="link-text">
                     Belum punya akun? <a href="/register">Daftar</a>
                 </div>
 

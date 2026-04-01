@@ -4,6 +4,18 @@
 
 @section('content')
 
+<!-- NOTE ATURAN -->
+<div class="alert alert-info mb-4">
+    <h5 class="mb-2">📌 Aturan Peminjaman Buku</h5>
+    <ul class="mb-0">
+        <li>Maksimal meminjam <b>3 buku</b> sekaligus</li>
+        <li>Lama peminjaman <b>7 hari</b></li>
+        <li>Denda keterlambatan <b>Rp 1.000 / hari</b></li>
+        <li>Tidak bisa meminjam jika masih ada buku yang belum dikembalikan</li>
+        <li>Jaga buku dengan baik, jika hilang wajib mengganti</li>
+    </ul>
+</div>
+
 <div class="row mb-4">
 
     <div class="col-md-3">
@@ -54,13 +66,13 @@
                 <td>Pemrograman Web</td>
                 <td>10 Jan 2026</td>
                 <td>17 Jan 2026</td>
-                <td><span class="badge badge-warning">Dipinjam</span></td>
+                <td><span class="badge bg-warning text-dark">Dipinjam</span></td>
             </tr>
             <tr>
                 <td>Basis Data</td>
                 <td>12 Jan 2026</td>
                 <td>19 Jan 2026</td>
-                <td><span class="badge badge-warning">Dipinjam</span></td>
+                <td><span class="badge bg-warning text-dark">Dipinjam</span></td>
             </tr>
         </tbody>
     </table>
@@ -82,12 +94,12 @@
             <tr>
                 <td>Algoritma</td>
                 <td>01 Jan 2026</td>
-                <td><span class="badge badge-success">Dikembalikan</span></td>
+                <td><span class="badge bg-success">Dikembalikan</span></td>
             </tr>
             <tr>
                 <td>Jaringan Komputer</td>
                 <td>05 Jan 2026</td>
-                <td><span class="badge badge-success">Dikembalikan</span></td>
+                <td><span class="badge bg-success">Dikembalikan</span></td>
             </tr>
         </tbody>
     </table>

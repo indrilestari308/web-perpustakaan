@@ -23,7 +23,6 @@
 
 <div class="form-box">
 
-    <h5 class="mb-4">✏️ Edit Buku</h5>
 
     {{-- ERROR --}}
     @if ($errors->any())
@@ -60,7 +59,7 @@
             <div class="col-md-6 mb-3">
                 <label>Kategori</label>
                 <select name="kategori_id" class="form-control">
-                    @foreach ($kategoris as $k)
+                    @foreach ($kategori as $k)
                         <option value="{{ $k->id }}"
                             {{ $buku->kategori_id == $k->id ? 'selected' : '' }}>
                             {{ $k->nama_kategori }}

@@ -147,33 +147,35 @@ body {
             </div>
 
             <div class="register-card">
+                @if ($errors->any())
+    <div>
+        @foreach ($errors->all() as $error)
+            <p style="color:red">{{ $error }}</p>
+        @endforeach
+    </div>
+@endif
 
-                <form>
+                <form method="POST" action="/register">
+                    @csrf
 
                     <div class="mb-3">
                         <label>Nama</label>
-                        <input type="text" class="form-control" placeholder="Masukkan nama">
-                    </div>
-
-                    <div class="mb-3">
-                        <label>Username</label>
-                        <input type="text" class="form-control" placeholder="Masukkan username">
+                        <input type="text" name="name" class="form-control" placeholder="Masukkan nama">
                     </div>
 
                     <div class="mb-3">
                         <label>Email</label>
-                        <input type="email" class="form-control" placeholder="Masukkan email">
+                        <input type="email" name="email" class="form-control" placeholder="Masukkan email">
                     </div>
 
                     <div class="mb-3">
                         <label>Password</label>
-                        <input type="password" class="form-control" placeholder="Masukkan password">
+                        <input type="password" name="password" class="form-control" placeholder="Masukkan password">
                     </div>
 
-                    <button type="button" class="btn btn-register w-100">
+                    <button type="submit" class="btn btn-register w-100">
                         Daftar
                     </button>
-
                 </form>
 
                 <div class="login-text">
