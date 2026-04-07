@@ -8,56 +8,81 @@
 
 <style>
 .card-box {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 5px 12px rgba(0,0,0,0.08);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
 }
 
-/* 🔥 TABEL COMPACT */
+/* HEADER */
+.card-box h5 {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* TABEL */
 .table {
     font-size: 13px;
+    border-collapse: separate;
+    border-spacing: 0 6px;
 }
 
-.table th,
-.table td {
-    padding: 8px;
-    vertical-align: middle;
-}
-
-.table th {
-    background: #f1f5f9;
-    font-size: 12px;
+.table thead th {
+    background: #f8fafc;
+    font-size: 11.5px;
     text-transform: uppercase;
+    color: #64748b;
+    border: none;
 }
 
-/* GAMBAR */
+.table tbody tr {
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    border-radius: 10px;
+}
+
+.table td {
+    border: none;
+    padding: 10px 8px;
+}
+
+/* COVER */
 .table img {
-    width: 45px;
-    height: 65px;
+    width: 50px;
+    height: 70px;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
 
 /* BADGE */
 .badge {
     font-size: 11px;
-    padding: 5px 8px;
+    padding: 6px 10px;
+    border-radius: 20px;
 }
 
-/* ICON */
-.action-icon a, .action-icon button {
-    font-size: 15px;
+/* ACTION */
+.action-icon a, 
+.action-icon button {
+    font-size: 16px;
     transition: 0.2s;
     border: none;
     background: none;
 }
 
-.icon-edit { color: #275194; }
-.icon-edit:hover { color: #143caa; transform: scale(1.2); }
+.icon-edit { color: #2563eb; }
+.icon-edit:hover { transform: scale(1.2); }
 
 .icon-delete { color: #ef4444; }
-.icon-delete:hover { color: #b91c1c; transform: scale(1.2); }
+.icon-delete:hover { transform: scale(1.2); }
+
+/* RESPONSIVE */
+@media(max-width:768px){
+    .table {
+        font-size: 12px;
+    }
+}
 </style>
 
 <div class="card-box">

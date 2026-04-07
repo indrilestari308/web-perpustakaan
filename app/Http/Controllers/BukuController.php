@@ -15,6 +15,12 @@ class BukuController extends Controller
         return view('petugas.buku.index', compact('bukus'));
     }
 
+    public function detail($id)
+    {
+        $buku = Buku::with('kategori')->findOrFail($id);
+        return view('anggota.detail', compact('buku'));
+    }    
+
     // FORM TAMBAH
 public function create()
 {
@@ -112,5 +118,55 @@ public function store(Request $request)
         return redirect()->route('buku.index')->with('success', 'Buku berhasil dihapus');
     }
 
-
+    public function indexAnggota(Request $request)
+    {
+        $query = Buku::with('kategori')->latest();
+    
+        if ($request->filled('cari')) {
+            $query->where(function($q) use ($request) {
+                $q->where('judul', 'like', '%'.$request->cari.'%')
+                  ->orWhere('penulis', 'like', '%'.$request->cari.'%');
+            });
+        }
+    
+        if ($request->filled('kategori')) {
+            $query->where('kategori_id', $request->kategori);
+        }
+    
+        $buku = $query->paginate(12);
+        $kategoriList = \App\Models\Kategori::all();
+    
+        return view('anggota.buku', compact('buku', 'kategoriList'));
+    }
+    
+    public function pinjam($id)
+    {
+        $buku = Buku::findOrFail($id);
+    
+        if ($buku->stok <= 0) {
+            return redirect()->back()->with('error', 'Stok buku habis.');
+        }
+    
+        $sudahPinjam = \App\Models\Peminjaman::where('user_id', auth()->id())
+            ->where('buku_id', $id)
+            ->where('status', 'dipinjam')
+            ->exists();
+    
+        if ($sudahPinjam) {
+            return redirect()->back()->with('error', 'Kamu sudah meminjam buku ini.');
+        }
+    
+        \App\Models\Peminjaman::create([
+            'user_id'         => auth()->id(),
+            'buku_id'         => $id,
+            'tanggal_pinjam'  => now(),
+            'tanggal_kembali' => now()->addDays(7),
+            'status'          => 'dipinjam',
+            'denda'           => 0,
+        ]);
+    
+        $buku->decrement('stok');
+    
+        return redirect()->back()->with('success', 'Buku berhasil dipinjam! Batas kembali: ' . now()->addDays(7)->format('d M Y'));
+    }
 }

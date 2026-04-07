@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Buku;
 use App\Models\Peminjaman;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AnggotaController extends Controller
 {
@@ -22,7 +23,36 @@ class AnggotaController extends Controller
     // DASHBOARD
     public function dashboard()
     {
-        return view('anggota.dashboard');
+        $userId = auth()->id();
+    
+        $semuaPinjaman = \App\Models\Peminjaman::where('user_id', $userId)->get();
+    
+        $totalPinjaman  = $semuaPinjaman->count();
+        $sedangDipinjam = $semuaPinjaman->where('status', 'dipinjam')->count();
+        $sudahKembali   = $semuaPinjaman->where('status', 'dikembalikan')->count();
+        $totalDenda     = $semuaPinjaman->sum('denda');
+    
+        $peminjamanAktif = \App\Models\Peminjaman::with('buku')
+            ->where('user_id', $userId)
+            ->where('status', 'dipinjam')
+            ->orderBy('tanggal_kembali')
+            ->get();
+    
+        $riwayatTerakhir = \App\Models\Peminjaman::with('buku')
+            ->where('user_id', $userId)
+            ->where('status', 'dikembalikan')
+            ->latest()
+            ->limit(3)
+            ->get();
+    
+        return view('anggota.dashboard', compact(
+            'totalPinjaman',
+            'sedangDipinjam',
+            'sudahKembali',
+            'totalDenda',
+            'peminjamanAktif',
+            'riwayatTerakhir'
+        ));
     }
 
     // HALAMAN DAFTAR BUKU
@@ -50,27 +80,70 @@ class AnggotaController extends Controller
         return view('anggota.peminjaman', compact('data'));
     }
 
-    // PROFIL
-    public function profil()
-    {
-        return view('anggota.profil');
-    }
+// PROFIL
+public function profil()
+{
+    return view('anggota.profil');
+}
 
-    public function updateProfil(Request $request)
-    {
-        $user = auth()->user();
+public function updateProfil(Request $request)
+{
+    $user = auth()->user();
+    $tab  = $request->input('tab', 'profil');
 
-        $user->name = $request->name;
+    if ($tab === 'profil') {
+
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'foto'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'name.required'  => 'Nama wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.unique'   => 'Email sudah digunakan akun lain.',
+            'foto.image'     => 'File harus berupa gambar.',
+            'foto.max'       => 'Ukuran foto maksimal 2MB.',
+        ]);
+
+        $user->name  = $request->name;
         $user->email = $request->email;
 
-        if ($request->password) {
-            $user->password = bcrypt($request->password);
+        if ($request->hasFile('foto')) {
+            if ($user->foto) {
+                Storage::disk('public')->delete($user->foto);
+            }
+            $user->foto = $request->file('foto')->store('foto-profil', 'public');
         }
 
         $user->save();
 
-        return back()->with('success', 'Profil berhasil diperbarui');
+        return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
+
+    } elseif ($tab === 'keamanan') {
+
+        $request->validate([
+            'password_lama' => 'required',
+            'password'      => 'required|string|min:6|confirmed',
+        ], [
+            'password_lama.required' => 'Password lama wajib diisi.',
+            'password.required'      => 'Password baru wajib diisi.',
+            'password.min'           => 'Password minimal 6 karakter.',
+            'password.confirmed'     => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        if (!\Hash::check($request->password_lama, $user->password)) {
+            return back()->withErrors(['password_lama' => 'Password lama tidak sesuai.'])->withInput();
+        }
+
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        return redirect()->back()->with('success', 'Password berhasil diperbarui!');
     }
+
+    return redirect()->back();
+}
+
 
     // PINJAM BUKU
     public function pinjam($id)
