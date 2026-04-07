@@ -12,6 +12,7 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.07);
 }
 
+
 .table thead th {
     background: #4e73df;
     color: white;
@@ -28,6 +29,10 @@
     vertical-align: middle;
     font-size: 14px;
     border-color: #f0f2f9;
+}
+.badge-menunggu {
+    background: #fff7e6;
+    color: #d97706;
 }
 
 .table tbody tr:hover {
@@ -225,12 +230,20 @@
                         @endif
                     </td>
                     <td>
-                        @if($terlambatHari > 0)
+                        @if($item->status == 'menunggu')
+                            <span class="badge-status badge-menunggu">Menunggu</span>
+
+                        @elseif($terlambatHari > 0)
                             <span class="badge-status badge-terlambat">Terlambat</span>
+
                         @elseif($item->status == 'dipinjam')
                             <span class="badge-status badge-dipinjam">Dipinjam</span>
+
+                        @elseif($item->status == 'dikembalikan')
+                            <span class="badge-status badge-dikembalikan">Dikembalikan</span>
+
                         @else
-                            <span class="badge-status badge-dikembalikan">{{ ucfirst($item->status) }}</span>
+                            <span class="badge-status">{{ ucfirst($item->status) }}</span>
                         @endif
                     </td>
                     <td>

@@ -32,10 +32,10 @@ class AnggotaController extends Controller
         $sudahKembali   = $semuaPinjaman->where('status', 'dikembalikan')->count();
         $totalDenda     = $semuaPinjaman->sum('denda');
     
-        $peminjamanAktif = \App\Models\Peminjaman::with('buku')
+        $peminjaman = \App\Models\Peminjaman::with('buku')
             ->where('user_id', $userId)
-            ->where('status', 'dipinjam')
-            ->orderBy('tanggal_kembali')
+            ->whereIn('status', ['menunggu', 'dipinjam']) // penting!
+            ->orderBy('tanggal_pinjam', 'desc')
             ->get();
     
         $riwayatTerakhir = \App\Models\Peminjaman::with('buku')
@@ -50,7 +50,14 @@ class AnggotaController extends Controller
             'sedangDipinjam',
             'sudahKembali',
             'totalDenda',
-            'peminjamanAktif',
+            'peminjaman', // 🔥 HARUS INI
+            'riwayatTerakhir'
+        ));return view('anggota.dashboard', compact(
+            'totalPinjaman',
+            'sedangDipinjam',
+            'sudahKembali',
+            'totalDenda',
+            'peminjaman', // 🔥 HARUS INI
             'riwayatTerakhir'
         ));
     }
@@ -146,25 +153,40 @@ public function updateProfil(Request $request)
 
 
     // PINJAM BUKU
-    public function pinjam($id)
-    {
-        $buku = Buku::findOrFail($id);
+public function pinjam($id)
+{
+    $buku = Buku::findOrFail($id);
 
-        if ($buku->stok <= 0) {
-            return back()->with('error', 'Stok buku habis!');
-        }
-
-        Peminjaman::create([
-            'user_id' => Auth::id(),
-            'buku_id' => $id,
-            'tanggal_pinjam' => now(),
-            'status' => 'dipinjam'
-        ]);
-
-        $buku->decrement('stok');
-
-        return back()->with('success', 'Buku berhasil dipinjam');
+    if ($buku->stok <= 0) {
+        return back()->with('error', 'Stok buku habis!');
     }
+
+    // CEK: biar user tidak spam pinjam buku yang sama
+    $sudahPinjam = Peminjaman::where('user_id', Auth::id())
+        ->where('buku_id', $id)
+        ->whereIn('status', ['menunggu', 'dipinjam'])
+        ->exists();
+
+    if ($sudahPinjam) {
+        return back()->with('error', 'Kamu sudah mengajukan atau sedang meminjam buku ini.');
+    }
+
+    dd([
+    'status_dikirim' => 'menunggu'
+    ]);
+
+    //SIMPAN SEBAGAI MENUNGGU
+    Peminjaman::create([
+        'user_id' => Auth::id(),
+        'buku_id' => $id,
+        'tanggal_pinjam' => now(),
+        'status' => 'menunggu'
+    ]);
+
+   
+
+    return back()->with('success', 'Permintaan peminjaman dikirim, tunggu konfirmasi petugas.');
+}
 
     // KEMBALIKAN BUKU
     public function kembali($id)

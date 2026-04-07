@@ -129,7 +129,7 @@
                     {{-- Total pinjam --}}
                     <td style="text-align:center;">
                         <span style="font-size:13px;font-weight:600;color:#4e73df;">
-                            {{ $u->peminjaman->count() }}
+                            {{ $u->peminjaman->where('status', 'dipinjam')->count() }}  
                         </span>
                         <span style="font-size:11px;color:#94a3b8;"> buku</span>
                     </td>
@@ -146,7 +146,7 @@
                                 data-foto="{{ $u->foto ? asset('storage/' . $u->foto) : '' }}"
                                 data-bergabung="{{ $u->created_at->format('d M Y') }}"
                                 data-total="{{ $u->peminjaman->count() }}"
-                                data-aktif="{{ $pinjamAktif->count() }}"
+                                data-aktif="$pinjamAktif = $u->peminjaman->whereIn('status', ['dipinjam', 'terlambat']);"
                                 data-pinjaman="{{ $pinjamAktif->map(fn($p) => [
                                     'judul'   => $p->buku->judul,
                                     'kembali' => \Carbon\Carbon::parse($p->tanggal_kembali)->format('d M Y'),

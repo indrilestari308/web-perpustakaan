@@ -11,8 +11,8 @@ class BukuController extends Controller
     // TAMPIL DATA
     public function index()
     {
-        $bukus = Buku::with('kategori')->latest()->paginate(5);
-        return view('petugas.buku.index', compact('bukus'));
+        $buku = Buku::with('kategori')->latest()->paginate(5);
+        return view('petugas.buku.index', compact('buku'));
     }
 
     public function detail($id)
@@ -139,34 +139,35 @@ public function store(Request $request)
         return view('anggota.buku', compact('buku', 'kategoriList'));
     }
     
-    public function pinjam($id)
-    {
-        $buku = Buku::findOrFail($id);
-    
-        if ($buku->stok <= 0) {
-            return redirect()->back()->with('error', 'Stok buku habis.');
-        }
-    
-        $sudahPinjam = \App\Models\Peminjaman::where('user_id', auth()->id())
-            ->where('buku_id', $id)
-            ->where('status', 'dipinjam')
-            ->exists();
-    
-        if ($sudahPinjam) {
-            return redirect()->back()->with('error', 'Kamu sudah meminjam buku ini.');
-        }
-    
-        \App\Models\Peminjaman::create([
-            'user_id'         => auth()->id(),
-            'buku_id'         => $id,
-            'tanggal_pinjam'  => now(),
-            'tanggal_kembali' => now()->addDays(7),
-            'status'          => 'dipinjam',
-            'denda'           => 0,
-        ]);
-    
-        $buku->decrement('stok');
-    
-        return redirect()->back()->with('success', 'Buku berhasil dipinjam! Batas kembali: ' . now()->addDays(7)->format('d M Y'));
+  public function pinjam($id)
+{
+    $buku = Buku::findOrFail($id);
+
+    if ($buku->stok <= 0) {
+        return redirect()->back()->with('error', 'Stok buku habis.');
     }
+
+    // 🔥 CEK biar ga double
+    $sudahPinjam = \App\Models\Peminjaman::where('user_id', auth()->id())
+        ->where('buku_id', $id)
+        ->whereIn('status', ['menunggu', 'dipinjam'])
+        ->exists();
+
+    if ($sudahPinjam) {
+        return redirect()->back()->with('error', 'Kamu sudah mengajukan atau meminjam buku ini.');
+    }
+
+    \App\Models\Peminjaman::create([
+        'user_id'         => auth()->id(),
+        'buku_id'         => $id,
+        'tanggal_pinjam'  => now(),
+        'tanggal_kembali' => now()->addDays(7),
+        'status'          => 'menunggu', // 🔥 INI YANG PENTING
+        'denda'           => 0,
+    ]);
+
+   
+
+    return redirect()->back()->with('success', 'Permintaan peminjaman dikirim, tunggu konfirmasi petugas.');
+}
 }

@@ -29,23 +29,44 @@ class PetugasController extends Controller
     }
 
     // ─── DASHBOARD ───────────────────────────────────────────
-    public function dashboard()
-    {
-        $totalBuku      = \App\Models\Buku::count();
-        $totalAnggota   = User::where('role', 'anggota')->count();
-        $sedangDipinjam = Peminjaman::whereIn('status', ['dipinjam', 'terlambat'])->count();
-        $menunggu       = Peminjaman::where('status', 'menunggu')->count();
+public function dashboard()
+{
+    $now = Carbon::now();
 
-        return view('petugas.dashboard', compact(
-            'totalBuku',
-            'totalAnggota',
-            'sedangDipinjam',
-            'menunggu'
-        ));
-    }
+    // Stat cards
+    $totalBuku       = \App\Models\Buku::count();
+    $totalAnggota    = User::where('role', 'anggota')->count();
+    $totalDipinjam   = Peminjaman::whereIn('status', ['dipinjam', 'terlambat'])->count();
+    $totalDenda      = Peminjaman::sum('denda');
+
+    // Sub-info kartu
+    $bukuBaru        = \App\Models\Buku::whereMonth('created_at', $now->month)
+                           ->whereYear('created_at', $now->year)->count();
+
+    $anggotaBaru     = User::where('role', 'anggota')
+                           ->whereMonth('created_at', $now->month)
+                           ->whereYear('created_at', $now->year)->count();
+
+    $totalTerlambat  = Peminjaman::where('status', 'terlambat')->count();
+
+    $dendaBelumBayar = Peminjaman::where('denda', '>', 0)
+                           ->where('status', '!=', 'dikembalikan')->count();
+
+    $stokHabis       = \App\Models\Buku::where('stok', '<=', 1)->count();
+
+    // Tabel peminjaman terbaru
+    $peminjamanTerbaru = Peminjaman::with(['user', 'buku'])
+                           ->latest()->take(6)->get();
+
+    return view('petugas.dashboard', compact(
+        'totalBuku', 'totalAnggota', 'totalDipinjam', 'totalDenda',
+        'bukuBaru', 'anggotaBaru', 'totalTerlambat', 'dendaBelumBayar',
+        'stokHabis', 'peminjamanTerbaru'
+    ));
+}
 
     // ─── DATA ANGGOTA ────────────────────────────────────────
-    
+
     public function anggota(Request $request)
     {
         $query = User::where('role', 'anggota')
