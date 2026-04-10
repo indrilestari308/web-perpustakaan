@@ -199,10 +199,11 @@
         <table class="table table-borderless">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>No</th>
                     <th>Buku</th>
                     <th>Tanggal Pinjam</th>
                     <th>Batas Kembali</th>
+                    <th>Tanggal Kembali</th>
                     <th>Status</th>
                     <th>Denda</th>
                     <th>Aksi</th>
@@ -210,42 +211,81 @@
             </thead>
             <tbody>
                 @foreach($peminjaman as $i => $item)
-                @php
-                    $hariIni     = \Carbon\Carbon::today();
-                    $batasKembali = \Carbon\Carbon::parse($item->tanggal_kembali);
-                    $terlambatHari = $hariIni->gt($batasKembali) ? $hariIni->diffInDays($batasKembali) : 0;
-                    $dendaHitung  = $terlambatHari * 1000; // Rp 1.000/hari
-                @endphp
-                <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>
-                        <div class="fw-semibold" style="font-size:14px;">{{ $item->buku->judul ?? '-' }}</div>
-                        <div style="font-size:12px; color:#999;">{{ $item->buku->penulis ?? '' }}</div>
-                    </td>
-                    <td>{{ \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') }}</td>
-                    <td>
-                        {{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') }}
-                        @if($terlambatHari > 0)
-                            <br><span style="font-size:11px; color:#e74c3c;">{{ $terlambatHari }} hari terlambat</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if($item->status == 'menunggu')
-                            <span class="badge-status badge-menunggu">Menunggu</span>
+@php
+    $hariIni = \Carbon\Carbon::today();
+    $batasKembali = \Carbon\Carbon::parse($item->batas_kembali);
 
-                        @elseif($terlambatHari > 0)
-                            <span class="badge-status badge-terlambat">Terlambat</span>
+    $tanggalKembali = $item->batas_kembalikan
+        ? \Carbon\Carbon::parse($item->batas_kembalikan)
+        : null;
 
-                        @elseif($item->status == 'dipinjam')
-                            <span class="badge-status badge-dipinjam">Dipinjam</span>
+    if ($tanggalKembali) {
+        $terlambatHari = $tanggalKembali->gt($batasKembali)
+            ? $tanggalKembali->diffInDays($batasKembali)
+            : 0;
+    } else {
+        $terlambatHari = $hariIni->gt($batasKembali)
+            ? $hariIni->diffInDays($batasKembali)
+            : 0;
+    }
 
-                        @elseif($item->status == 'dikembalikan')
-                            <span class="badge-status badge-dikembalikan">Dikembalikan</span>
+    $dendaHitung = $terlambatHari * 1000;
+@endphp
 
-                        @else
-                            <span class="badge-status">{{ ucfirst($item->status) }}</span>
-                        @endif
-                    </td>
+<tr>
+    <td>{{ $i + 1 }}</td>
+
+    <td>
+        <div class="fw-semibold" style="font-size:14px;">
+            {{ $item->buku->judul ?? '-' }}
+        </div>
+        <div style="font-size:12px; color:#999;">
+            {{ $item->buku->penulis ?? '' }}
+        </div>
+    </td>
+
+    <!-- Tanggal Pinjam -->
+    <td>{{ $item->tanggal_pinjam ? \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') : '-' }}</td>
+
+    <!-- Batas Kembali -->
+    <td>
+        {{ $batasKembali ? $batasKembali->format('d M Y') : '-' }}
+        @if($terlambatHari > 0)
+            <br>
+            <span style="font-size:11px; color:#e74c3c;">
+                {{ $terlambatHari }} hari terlambat
+            </span>
+        @endif
+    </td>
+
+    <!-- Tanggal Dikembalikan -->
+    <td>
+        {{ $item->batas_kembalikan
+            ? \Carbon\Carbon::parse($item->tanggal_kembalikan)->format('d M Y')
+            : '-' }}
+    </td>
+
+    <!-- Status -->
+    <td>
+        @if($item->status == 'menunggu')
+            <span class="badge-status badge-menunggu">Menunggu</span>
+
+        @elseif($item->status == 'menunggu_kembali') {{-- ✅ tambah --}}
+            <span class="badge-status badge-menunggu">Menunggu Konfirmasi Petugas</span>
+
+        @elseif($item->status == 'dikembalikan')
+            <span class="badge-status badge-dikembalikan">Dikembalikan</span>
+
+        @elseif($terlambatHari > 0)
+            <span class="badge-status badge-terlambat">Terlambat</span>
+
+        @elseif($item->status == 'dipinjam')
+            <span class="badge-status badge-dipinjam">Dipinjam</span>
+
+        @else
+            <span class="badge-status">{{ ucfirst($item->status) }}</span>
+        @endif
+    </td>
                     <td>
                         @if($dendaHitung > 0)
                             <span class="denda-text">Rp {{ number_format($dendaHitung, 0, ',', '.') }}</span>
@@ -256,15 +296,17 @@
                     <td>
                         @if($item->status == 'dipinjam')
                         <form action="{{ route('anggota.peminjaman.kembali', $item->id) }}" method="POST"
-                              onsubmit="return confirm('Konfirmasi pengembalian buku ini?')">
+                              onsubmit="return confirm('Ajukan pengembalian buku ini? Petugas akan mengkonfirmasi pengembalian.')">
                             @csrf
                             @method('PUT')
                             <button type="submit" class="btn btn-kembali">
                                 <i class="bi bi-arrow-return-left me-1"></i>Kembalikan
                             </button>
                         </form>
-                        @else
-                            <span style="font-size:12px; color:#aaa;">Sudah dikembalikan</span>
+                        @elseif($item->status == 'menunggu_kembali') {{-- ✅ --}}
+                            <span style="font-size:12px; color:#d97706;">
+                                <i class="bi bi-hourglass-split me-1"></i>Menunggu petugas...
+                            </span>
                         @endif
                     </td>
                 </tr>

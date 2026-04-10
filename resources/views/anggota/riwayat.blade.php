@@ -155,7 +155,7 @@
         <table class="table table-borderless">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>No</th>
                     <th>Buku</th>
                     <th>Tgl Pinjam</th>
                     <th>Batas Kembali</th>
@@ -168,9 +168,9 @@
                 @foreach($riwayat as $i => $item)
                 @php
                     $terlambatHari = 0;
-                    if($item->tanggal_dikembalikan && $item->tanggal_kembali) {
-                        $kembali = \Carbon\Carbon::parse($item->tanggal_dikembalikan);
-                        $batas   = \Carbon\Carbon::parse($item->tanggal_kembali);
+                    if($item->tanggal_kembalikan && $item->batas_kembali) {
+                        $kembali = \Carbon\Carbon::parse($item->tanggal_kembalikan);
+                        $batas   = \Carbon\Carbon::parse($item->batas_kembali);
                         $terlambatHari = $kembali->gt($batas) ? $kembali->diffInDays($batas) : 0;
                     }
                     $denda = $item->denda ?? ($terlambatHari * 1000);
@@ -182,10 +182,10 @@
                         <div style="font-size:12px; color:#999;">{{ $item->buku->penulis ?? '' }}</div>
                     </td>
                     <td>{{ \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}</td>
                     <td>
-                        @if($item->tanggal_dikembalikan)
-                            {{ \Carbon\Carbon::parse($item->tanggal_dikembalikan)->format('d M Y') }}
+                        @if($item->tanggal_kembalikan)
+                            {{ \Carbon\Carbon::parse($item->tanggal_kembalikan)->format('d M Y') }}
                         @else
                             <span style="color:#aaa; font-size:12px;">Belum</span>
                         @endif

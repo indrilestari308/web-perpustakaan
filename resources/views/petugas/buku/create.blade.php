@@ -334,7 +334,7 @@
                         <label class="form-label">Kategori</label>
                         <select name="kategori_id" class="form-select @error('kategori_id') is-invalid @enderror">
                             <option value="">-- Pilih Kategori --</option>
-                            @foreach($kategoris as $kat)
+                            @foreach($kategori as $kat)
                                 <option value="{{ $kat->id }}" {{ old('kategori_id') == $kat->id ? 'selected' : '' }}>
                                     {{ $kat->nama_kategori }}
                                 </option>
@@ -347,9 +347,9 @@
 
                     <div class="form-group">
                         <label class="form-label">Deskripsi / Sinopsis</label>
-                        <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror"
-                                  placeholder="Ringkasan isi buku...">{{ old('deskripsi') }}</textarea>
-                        @error('deskripsi')
+                        <textarea name="sinopsis" class="form-control @error('sinopsis') is-invalid @enderror"
+                                  placeholder="Ringkasan isi buku...">{{ old('sinopsis') }}</textarea>
+                        @error('sinopsis')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
@@ -402,16 +402,6 @@
                     </div>
 
                     <div class="row-2">
-                        <div class="form-group">
-                            <label class="form-label">ISBN</label>
-                            <input type="text" name="isbn" value="{{ old('isbn') }}"
-                                   class="form-control @error('isbn') is-invalid @enderror"
-                                   placeholder="978-xxx-xxx-xxx-x">
-                            @error('isbn')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
                         <div class="form-group">
                             <label class="form-label">Stok <span class="req">*</span></label>
                             <input type="number" name="stok" value="{{ old('stok', 1) }}"

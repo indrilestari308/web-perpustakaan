@@ -5,6 +5,9 @@
 @section('content')
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap');
+
+/* ===== INFO BANNER ===== */
 .info-banner {
     background: #fff;
     border: 1px solid #b5d4f4;
@@ -16,10 +19,11 @@
     color: #555;
 }
 
+/* ===== SEARCH BAR ===== */
 .search-bar {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     align-items: center;
 }
 
@@ -32,6 +36,7 @@
     font-size: 13px;
     color: #333;
     outline: none;
+    transition: border-color 0.2s;
 }
 
 .search-input:focus {
@@ -49,29 +54,37 @@
     cursor: pointer;
 }
 
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+/* ===== BOOK CARD – PORTRAIT ===== */
 .book-card {
     background: #fff;
-    border-radius: 16px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 3px 14px rgba(0,0,0,0.07);
-    transition: transform 0.2s, box-shadow 0.2s;
-    height: 100%;
+    border: 1px solid #eaeef8;
+    transition: all 0.22s;
+    display: flex;
+    flex-direction: column;
+    width: 200px;
 }
 
 .book-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-5px);
+    box-shadow: 0 14px 32px rgba(30, 30, 80, 0.12);
 }
 
+/* Cover portrait 2:3 */
 .book-cover-wrap {
     position: relative;
     width: 100%;
-    height: 200px;
+    aspect-ratio: 2 / 3;
     overflow: hidden;
-    background: #f0f2f9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: #1a1a2e;
+    flex-shrink: 0;
 }
 
 .book-cover-wrap img {
@@ -80,128 +93,179 @@
     object-fit: cover;
 }
 
+/* Punggung buku */
+.book-spine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+/* Placeholder cover – warna berbeda per sisa stok / kategori */
 .cover-placeholder {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-}
-
-.cover-spine {
-    width: 70px;
-    height: 100px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #4e73df, #224abe);
+    gap: 8px;
+    padding: 20px;
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 55%, #0f3460 100%);
 }
 
+.cover-placeholder-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    text-align: center;
+    line-height: 1.45;
+}
+
+.cover-placeholder-line {
+    width: 32px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.cover-placeholder-author {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.48);
+    text-align: center;
+}
+
+/* Badge stok */
 .stock-badge {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 10px;
+    top: 9px;
+    right: 9px;
+    padding: 3px 9px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
 }
 
-.stock-ok   { background: #eafaf1; color: #1a7a45; }
-.stock-out  { background: #fdeaea; color: #a32d2d; }
+.stock-ok {
+    background: rgba(16, 185, 129, 0.14);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+}
 
+.stock-out {
+    background: rgba(239, 68, 68, 0.14);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+/* Info section */
 .book-body {
-    padding: 14px 16px;
+    padding: 13px 15px 15px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .book-title {
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 14px;
     font-weight: 600;
-    color: #333;
-    margin-bottom: 4px;
+    color: #1e1e3a;
+    margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .book-author {
-    font-size: 12px;
-    color: #aaa;
-    margin-bottom: 4px;
+    font-size: 11.5px;
+    color: #9ca3af;
+    margin-bottom: 9px;
 }
 
 .book-kategori {
     display: inline-block;
     background: #eef2ff;
     color: #4e73df;
-    font-size: 11px;
-    padding: 2px 8px;
+    font-size: 10.5px;
+    padding: 2px 9px;
     border-radius: 6px;
     margin-bottom: 12px;
+    font-weight: 500;
 }
 
 .book-actions {
     display: flex;
-    gap: 8px;
+    gap: 7px;
+    margin-top: auto;
 }
 
 .btn-detail {
     flex: 1;
-    background: #eef2ff;
+    background: #f4f6fb;
     color: #4e73df;
-    border: none;
+    border: 1px solid #dde3f0;
     border-radius: 8px;
     padding: 8px;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
     text-align: center;
     text-decoration: none;
     display: block;
-    transition: background 0.2s;
+    transition: background 0.18s;
+    line-height: 1;
 }
 
 .btn-detail:hover {
     background: #dde6ff;
     color: #4e73df;
+    text-decoration: none;
 }
 
 .btn-pinjam {
     flex: 1;
-    background: #4e73df;
-    color: white;
+    background: #1a1a2e;
+    color: #fff;
     border: none;
     border-radius: 8px;
     padding: 8px;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.18s;
+    line-height: 1;
 }
 
 .btn-pinjam:hover {
-    background: #224abe;
+    background: #0f3460;
 }
 
 .btn-pinjam:disabled {
-    background: #e0e0e0;
-    color: #aaa;
+    background: #e9ecef;
+    color: #adb5bd;
     cursor: not-allowed;
+    border: 1px solid #dee2e6;
 }
 
+/* Empty state */
 .empty-state {
     text-align: center;
-    padding: 60px;
-    color: #ccc;
+    padding: 60px 20px;
+    color: #c9d0e0;
 }
 
 .empty-state i {
-    font-size: 50px;
-    margin-bottom: 12px;
+    font-size: 48px;
+    margin-bottom: 14px;
     display: block;
 }
 </style>
 
-{{-- NOTIF --}}
+{{-- NOTIFIKASI --}}
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
     <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
@@ -235,27 +299,34 @@
             </option>
         @endforeach
     </select>
+    <button type="submit" class="btn btn-primary" style="border-radius: 10px; padding: 10px 18px; font-size: 13px;">
+        <i class="bi bi-search"></i>
+    </button>
 </form>
 
 {{-- GRID BUKU --}}
-<div class="row g-4">
+<div class="book-grid">
     @forelse ($buku as $item)
-    <div class="col-md-4 col-sm-6">
+    <div class="col-xl-3 col-md-4 col-sm-6">
         <div class="book-card">
 
-            {{-- COVER --}}
+            {{-- COVER PORTRAIT --}}
             <div class="book-cover-wrap">
                 @if($item->gambar)
-                    <img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}">
+                    <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->judul }}">
                 @else
                     <div class="cover-placeholder">
-                        <div class="cover-spine">
-                            <i class="bi bi-book" style="font-size:24px; color:rgba(255,255,255,0.8);"></i>
-                        </div>
+                        <div class="cover-placeholder-line"></div>
+                        <div class="cover-placeholder-title">{{ $item->judul }}</div>
+                        <div class="cover-placeholder-line"></div>
+                        <div class="cover-placeholder-author">{{ $item->penulis }}</div>
                     </div>
                 @endif
 
-                {{-- BADGE STOK --}}
+                {{-- Efek punggung buku --}}
+                <div class="book-spine"></div>
+
+                {{-- Badge stok --}}
                 @if($item->stok > 0)
                     <span class="stock-badge stock-ok">Tersedia</span>
                 @else
@@ -263,10 +334,10 @@
                 @endif
             </div>
 
-            {{-- INFO --}}
+            {{-- INFO BUKU --}}
             <div class="book-body">
                 <div class="book-title" title="{{ $item->judul }}">{{ $item->judul }}</div>
-                <div class="book-author">{{ $item->penulis }} • {{ $item->tahun_terbit }}</div>
+                <div class="book-author">{{ $item->penulis }} &bull; {{ $item->tahun_terbit }}</div>
 
                 @if($item->kategori)
                     <span class="book-kategori">{{ $item->kategori->nama_kategori }}</span>
@@ -274,19 +345,19 @@
 
                 <div class="book-actions">
                     <a href="{{ route('anggota.buku.detail', $item->id) }}" class="btn-detail">
-                        Lihat Detail
+                        Detail
                     </a>
 
                     @if($item->stok > 0)
-                    <form action="{{ route('anggota.pinjam', $item->id) }}" method="POST" style="flex:1;">
-                        @csrf
-                        <button type="submit" class="btn-pinjam" style="width:100%;"
-                                onclick="return confirm('Pinjam buku ini?')">
-                            Pinjam
-                        </button>
-                    </form>
+                        <form action="{{ route('anggota.pinjam', $item->id) }}" method="POST" style="flex:1; display:flex;">
+                            @csrf
+                            <button type="submit" class="btn-pinjam" style="width:100%;"
+                                    onclick="return confirm('Pinjam buku \u0022{{ addslashes($item->judul) }}\u0022?')">
+                                Pinjam
+                            </button>
+                        </form>
                     @else
-                    <button class="btn-pinjam" style="flex:1;" disabled>Habis</button>
+                        <button class="btn-pinjam" style="flex:1;" disabled>Habis</button>
                     @endif
                 </div>
             </div>
@@ -297,8 +368,8 @@
     <div class="col-12">
         <div class="empty-state">
             <i class="bi bi-book-x"></i>
-            <p class="fw-semibold mb-1">Buku tidak ditemukan</p>
-            <p style="font-size:13px;">Coba ubah kata kunci pencarian</p>
+            <p class="fw-semibold mb-1" style="color: #6b7280;">Buku tidak ditemukan</p>
+            <p style="font-size: 13px; color: #9ca3af;">Coba ubah kata kunci pencarian atau pilih kategori lain.</p>
         </div>
     </div>
     @endforelse

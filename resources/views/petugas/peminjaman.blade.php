@@ -4,13 +4,7 @@
 
 @section('content')
 
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <p class="mb-0" style="font-size:13px; color:#64748b;">
-            Konfirmasi peminjaman, pengembalian, dan riwayat anggota
-        </p>
-    </div>
-</div>
+
 
 <div class="card" style="border-radius:12px; overflow:hidden;">
 
@@ -20,6 +14,7 @@
             ['tab' => 'menunggu',     'label' => 'Menunggu Konfirmasi', 'count' => $jumlahMenunggu,  'cls' => 'tab-count-warning'],
             ['tab' => 'dipinjam',     'label' => 'Sedang Dipinjam',     'count' => $jumlahDipinjam,  'cls' => 'tab-count-info'],
             ['tab' => 'terlambat',    'label' => 'Terlambat',           'count' => $jumlahTerlambat, 'cls' => 'tab-count-danger'],
+            ['tab' => 'menunggu_kembali','label' => 'Menunggu Pengembalian','count' => $jumlahKembali,  'cls' => 'tab-count-warning'],
             ['tab' => 'dikembalikan', 'label' => 'Selesai',             'count' => $jumlahSelesai,   'cls' => 'tab-count-success'],
         ] as $t)
         <a href="{{ request()->fullUrlWithQuery(['tab' => $t['tab'], 'page' => 1]) }}"
@@ -105,7 +100,7 @@
                     <td>
                         <div style="font-size:13.5px;">{{ $item->buku->judul }}</div>
                         <div style="font-size:11px; color:#94a3b8;">
-                            {{ $item->buku->kategori->nama ?? '-' }}
+                            {{ $item->buku->kategori->nama_kategori ?? '-' }}
                         </div>
                     </td>
 
@@ -118,14 +113,14 @@
 
                     {{-- Tgl Kembali --}}
                     <td style="font-size:13px;">
-                        {{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') }}
+                        {{ \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}
                     </td>
 
                     {{-- Kolom tambahan: Selesai --}}
                     @if($activeTab === 'dikembalikan')
                         <td style="font-size:13px;">
-                            {{ $item->tanggal_dikembalikan
-                                ? \Carbon\Carbon::parse($item->tanggal_dikembalikan)->format('d M Y')
+                            {{ $item->tanggal_kembalikan
+                                ? \Carbon\Carbon::parse($item->tanggal_kembalikan)->format('d M Y')
                                 : '-' }}
                         </td>
                         <td style="font-size:13px;">
@@ -143,7 +138,7 @@
                     @if($activeTab === 'terlambat')
                         @php
                             $hariTerlambat = \Carbon\Carbon::today()
-                                ->diffInDays(\Carbon\Carbon::parse($item->tanggal_kembali));
+                                ->diffInDays(\Carbon\Carbon::parse($item->batas_kembali));
                             $estDenda = $hariTerlambat * 1000;
                         @endphp
                         <td>
@@ -166,7 +161,6 @@
                                 'dipinjam'     => ['badge-dipinjam',     'Dipinjam'],
                                 'terlambat'    => ['badge-terlambat',    'Terlambat'],
                                 'dikembalikan' => ['badge-dikembalikan', 'Dikembalikan'],
-                                'ditolak'      => ['badge-terlambat',    'Ditolak'],
                             ];
                             [$badgeCls, $badgeLabel] = $badgeMap[$item->status] ?? ['badge-dipinjam', $item->status];
                         @endphp
@@ -174,37 +168,29 @@
                     </td>
 
                     {{-- Aksi --}}
+
                     <td>
+                        @if($item->status == 'menunggu')
+                        <form action="{{ route('peminjaman.konfirmasi', $item->id) }}" method="POST"
+                            onsubmit="return confirm('Setujui peminjaman ini?')">
+                            @csrf
+                            @method('PUT')
+                            <button class="btn btn-primary btn-sm">
+                                <i class="bi bi-check-circle me-1"></i>Konfirmasi
+                            </button>
+                        </form>
+                        @endif
                         <div class="d-flex gap-1 align-items-center flex-wrap">
 
-                            @if($item->status === 'menunggu')
-                                {{-- Setujui --}}
-                                <form action="{{ route('peminjaman.konfirmasi', $item->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary btn-sm"
-                                            onclick="return confirm('Setujui peminjaman ini?')">
-                                        <i class="bi bi-check-lg"></i> Setujui
-                                    </button>
-                                </form>
-                                {{-- Tolak --}}
-                                <form action="{{ route('peminjaman.tolak', $item->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm"
-                                            onclick="return confirm('Tolak peminjaman ini?')"
-                                            title="Tolak">
-                                        <i class="bi bi-x"></i>
-                                    </button>
-                                </form>
-
-                            @elseif(in_array($item->status, ['dipinjam', 'terlambat']))
-                                {{-- Kembalikan --}}
-                                <form action="{{ route('peminjaman.kembalikan', $item->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm"
-                                            onclick="return confirm('Konfirmasi pengembalian buku ini?')">
-                                        <i class="bi bi-arrow-return-left me-1"></i> Kembalikan
-                                    </button>
-                                </form>
+                            @if($item->status == 'menunggu_kembali')
+                            <form action="{{ route('konfirmasiPengembalian', $item->id) }}" method="POST"
+                                onsubmit="return confirm('Konfirmasi pengembalian buku ini?')">
+                                @csrf
+                                @method('PUT')
+                                <button class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle me-1"></i>Konfirmasi
+                                </button>
+                            </form>
                             @endif
 
                             {{-- Tombol Detail --}}
@@ -216,14 +202,12 @@
                                     data-nama="{{ $item->user->name }}"
                                     data-email="{{ $item->user->email }}"
                                     data-buku="{{ $item->buku->judul }}"
-                                    data-isbn="{{ $item->buku->isbn ?? '-' }}"
-                                    data-kategori="{{ $item->buku->kategori->nama ?? '-' }}"
+                                    data-kategori="{{ $item->buku->kategori->nama_kategori ?? '-' }}"
                                     data-pinjam="{{ $item->tanggal_pinjam ? \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') : '-' }}"
-                                    data-kembali="{{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') }}"
-                                    data-dikembalikan="{{ $item->tanggal_dikembalikan ? \Carbon\Carbon::parse($item->tanggal_dikembalikan)->format('d M Y') : '-' }}"
+                                    data-kembali="{{ \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}"
+                                    data-dikembalikan="{{ $item->tanggal_kembalikan ? \Carbon\Carbon::parse($item->batas_kembalikan)->format('d M Y') : '-' }}"
                                     data-status="{{ $item->status }}"
-                                    data-denda="{{ $item->denda > 0 ? 'Rp ' . number_format($item->denda, 0, ',', '.') : '-' }}"
-                                    data-catatan="{{ $item->catatan ?? '-' }}">
+                                    data-denda="{{ $item->denda > 0 ? 'Rp ' . number_format($item->denda, 0, ',', '.') : '-' }}">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </div>
@@ -291,10 +275,6 @@
                             <td style="color:#0f172a;font-weight:500;" id="modal-buku">-</td>
                         </tr>
                         <tr>
-                            <td style="color:#64748b;padding:3px 0;">ISBN</td>
-                            <td style="color:#0f172a;" id="modal-isbn">-</td>
-                        </tr>
-                        <tr>
                             <td style="color:#64748b;padding:3px 0;">Kategori</td>
                             <td style="color:#0f172a;" id="modal-kategori">-</td>
                         </tr>
@@ -327,8 +307,6 @@
                         <div id="modal-status-wrap"></div>
                         <div id="modal-denda-wrap" style="font-size:13px;font-weight:600;color:#ef4444;"></div>
                     </div>
-                    <div style="font-size:12px;color:#64748b;background:#f8fafc;border-radius:8px;padding:10px 12px;margin-top:10px;"
-                         id="modal-catatan">-</div>
                 </div>
 
             </div>
@@ -365,29 +343,25 @@ document.addEventListener('DOMContentLoaded', function () {
     modalEl.addEventListener('show.bs.modal', function (e) {
         const btn = e.relatedTarget;
 
-        const nama        = btn.dataset.nama;
-        const email       = btn.dataset.email;
-        const buku        = btn.dataset.buku;
-        const isbn        = btn.dataset.isbn;
-        const kategori    = btn.dataset.kategori;
-        const pinjam      = btn.dataset.pinjam;
-        const kembali     = btn.dataset.kembali;
+        const nama         = btn.dataset.nama;
+        const email        = btn.dataset.email;
+        const buku         = btn.dataset.buku;
+        const kategori     = btn.dataset.kategori;
+        const pinjam       = btn.dataset.pinjam;
+        const kembali      = btn.dataset.kembali;
         const dikembalikan = btn.dataset.dikembalikan;
-        const status      = btn.dataset.status;
-        const denda       = btn.dataset.denda;
-        const catatan     = btn.dataset.catatan;
+        const status       = btn.dataset.status;
+        const denda        = btn.dataset.denda;
 
         // Isi data
-        document.getElementById('modal-avatar').textContent  = nama.substring(0, 2).toUpperCase();
-        document.getElementById('modal-nama').textContent    = nama;
-        document.getElementById('modal-email').textContent   = email;
-        document.getElementById('modal-buku').textContent    = buku;
-        document.getElementById('modal-isbn').textContent    = isbn;
+        document.getElementById('modal-avatar').textContent   = nama.substring(0, 2).toUpperCase();
+        document.getElementById('modal-nama').textContent     = nama;
+        document.getElementById('modal-email').textContent    = email;
+        document.getElementById('modal-buku').textContent     = buku;
         document.getElementById('modal-kategori').textContent = kategori;
-        document.getElementById('modal-pinjam').textContent  = pinjam;
-        document.getElementById('modal-kembali').textContent = kembali;
+        document.getElementById('modal-pinjam').textContent   = pinjam;
+        document.getElementById('modal-kembali').textContent  = kembali;
         document.getElementById('modal-dikembalikan').textContent = dikembalikan;
-        document.getElementById('modal-catatan').textContent = catatan === '-' ? 'Tidak ada catatan' : catatan;
 
         // Sembunyikan kolom dikembalikan kalau belum
         document.getElementById('wrap-dikembalikan').style.display =

@@ -369,8 +369,7 @@
 
 <!-- BOTTOM SECTION -->
 <div class="bottom-grid">
-
-    <!-- TABEL PEMINJAMAN TERBARU -->
+<!-- TABEL PEMINJAMAN TERBARU -->
     <div class="section-card">
         <div class="section-head">
             <h3><i class="fa-solid fa-clock-rotate-left" style="color:#2563eb; margin-right:7px;"></i> Peminjaman Terbaru</h3>
@@ -392,6 +391,7 @@
                     @php
                         $terlambat = $p->tanggal_kembali && now()->gt($p->tanggal_kembali) && !$p->tanggal_dikembalikan;
                         $kembali   = (bool) $p->tanggal_dikembalikan;
+                        $menunggu  = $p->status === 'menunggu';
                         $inisial   = collect(explode(' ', $p->user->name ?? 'U N'))
                                         ->map(fn($w) => strtoupper(substr($w, 0, 1)))
                                         ->take(2)
@@ -405,7 +405,7 @@
                                 <div class="avatar-initials" style="background:{{ $c[0] }}; color:{{ $c[1] }}">
                                     {{ $inisial }}
                                 </div>
-                                <span>{{ $p->anggota->name ?? '-' }}</span>
+                                <span>{{ $p->user->name ?? '-' }}</span>
                             </div>
                         </td>
                         <td>{{ \Illuminate\Support\Str::limit($p->buku->judul ?? '-', 28) }}</td>
@@ -415,6 +415,8 @@
                         <td>
                             @if($kembali)
                                 <span class="status-badge badge-kembali">Dikembalikan</span>
+                            @elseif($menunggu)
+                                <span class="status-badge badge-menunggu">Menunggu</span>
                             @elseif($terlambat)
                                 <span class="status-badge badge-terlambat">Terlambat</span>
                             @else

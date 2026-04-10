@@ -386,7 +386,7 @@
                         @if($b->gambar)
                             <img src="{{ asset('storage/' . $b->gambar) }}"
                                  alt="{{ $b->judul }}"
-                                 class="book-cover">
+                                 class="book-cover" >
                         @else
                             <div class="book-cover-placeholder">
                                 <i class="bi bi-book"></i>

@@ -99,6 +99,14 @@
             border: 1px solid #e0e7ff;
             border-radius: 14px; padding: 22px;
         }
+        .buku-cover {
+            height: 140px;
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .fitur-icon {
             width: 40px; height: 40px; border-radius: 10px;
             background: #dbeafe;
@@ -263,27 +271,32 @@
             ];
         @endphp
 
-        @forelse($bukuTerbaru as $buku)
-        @php $c = $covers[$loop->index % 4]; @endphp
-        <div class="buku-card">
-            <div class="buku-cover" style="background: {{ $c['bg'] }};">
-                <svg viewBox="0 0 24 24" style="stroke: {{ $c['stroke'] }};">
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-                </svg>
-            </div>
-            <div class="buku-info">
-                <div class="buku-kat">{{ $buku->kategori->nama ?? 'Umum' }}</div>
-                <div class="buku-judul">{{ $buku->judul }}</div>
-                <div class="buku-pengarang">{{ $buku->pengarang }}</div>
-                @if($buku->stok > 0)
-                    <span class="badge-tersedia">Tersedia</span>
-                @else
-                    <span class="badge-dipinjam">Habis</span>
-                @endif
-            </div>
-        </div>
-        @empty
+@forelse($bukuTerbaru as $buku)
+@php $c = $covers[$loop->index % 4]; @endphp
+<div class="buku-card">
+    <div class="buku-cover" style="background: {{ $c['bg'] }};">
+        @if($buku->gambar)
+            <img src="{{ asset('storage/' . $buku->gambar) }}"
+                 style="width:100%; height:100%; object-fit:cover;">
+        @else
+            <svg viewBox="0 0 24 24" style="stroke: {{ $c['stroke'] }};">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+        @endif
+    </div>
+    <div class="buku-info">
+        <div class="buku-kat">{{ $buku->kategori->nama_kategori ?? 'Umum' }}</div> {{-- ✅ fix --}}
+        <div class="buku-judul">{{ $buku->judul }}</div>
+        <div class="buku-pengarang">{{ $buku->penulis }}</div> {{-- ✅ fix --}}
+        @if($buku->stok > 0)
+            <span class="badge-tersedia">Tersedia</span>
+        @else
+            <span class="badge-dipinjam">Habis</span>
+        @endif
+    </div>
+</div>
+@empty
         @foreach([
             ['Fiksi', 'Perahu Kertas', 'Dewi Lestari', '#dbeafe', '#2563eb', true],
             ['Sains', 'Fisika Dasar', 'Halliday & Resnick', '#fce7f3', '#db2777', true],

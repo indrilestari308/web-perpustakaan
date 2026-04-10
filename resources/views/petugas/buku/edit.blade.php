@@ -400,9 +400,9 @@
 
                     <div class="form-group">
                         <label class="form-label">Deskripsi / Sinopsis</label>
-                        <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror"
-                                  placeholder="Ringkasan isi buku...">{{ old('deskripsi', $buku->deskripsi) }}</textarea>
-                        @error('deskripsi')
+                        <textarea name="sinopsis" class="form-control @error('sinopsis') is-invalid @enderror"
+                                  placeholder="Ringkasan isi buku...">{{ old('sinopsis', $buku->sinopsis) }}</textarea>
+                        @error('sinopsis')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
@@ -459,16 +459,6 @@
                     </div>
 
                     <div class="row-2">
-                        <div class="form-group">
-                            <label class="form-label">ISBN</label>
-                            <input type="text" name="isbn" value="{{ old('isbn', $buku->isbn ?? '') }}"
-                                   class="form-control @error('isbn') is-invalid @enderror"
-                                   placeholder="978-xxx-xxx-xxx-x">
-                            @error('isbn')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
                         <div class="form-group">
                             <label class="form-label">Stok <span class="req">*</span></label>
                             <input type="number" name="stok" value="{{ old('stok', $buku->stok) }}"

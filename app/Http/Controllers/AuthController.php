@@ -14,19 +14,23 @@ class AuthController extends Controller
     // =====================
 
     // tampil halaman login
-public function showLogin()
-{
-    if (Auth::check()) {
-        Auth::logout();
-    }
+        public function showLogin()
+        {
+            if (Auth::check()) {
+                return redirect('/'); // atau ke dashboard sesuai role
+            }
 
-    return view('auth.login');
+            return view('auth.login');
+        }
 
-    }
-
-    // proses login
+        // proses login
     public function login(Request $request)
     {
+        // 🚫 Cegah login kalau masih ada user aktif
+        if (Auth::check()) {
+            return back()->with('error', 'Silakan logout dulu sebelum login akun lain');
+        }
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required'
@@ -37,7 +41,6 @@ public function showLogin()
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // redirect berdasarkan role
             if ($user->role == 'kepala') {
                 return redirect()->route('kepala.dashboard');
             } elseif ($user->role == 'petugas') {
@@ -49,7 +52,6 @@ public function showLogin()
 
         return back()->with('error', 'Email atau password salah');
     }
-
     // =====================
     // 📝 REGISTER
     // =====================

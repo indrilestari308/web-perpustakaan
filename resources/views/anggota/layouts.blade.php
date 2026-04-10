@@ -176,15 +176,15 @@
     <a href="/anggota/profil" class="{{ request()->is('anggota/profil') ? 'active' : '' }}">
         <i class="bi bi-person-circle"></i> Profil
     </a>
-        <div class="sidebar-footer">
-            <hr>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" style="border:none; background:none;">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </button>
-            </form>
-        </div>
+    <div class="sidebar-footer">
+        <hr>
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <a href="#" onclick="event.preventDefault(); this.closest('form').submit();">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </form>
+    </div>
 </div>
 
 <!-- CONTENT -->

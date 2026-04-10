@@ -24,27 +24,27 @@ class AnggotaController extends Controller
     public function dashboard()
     {
         $userId = auth()->id();
-    
+
         $semuaPinjaman = \App\Models\Peminjaman::where('user_id', $userId)->get();
-    
+
         $totalPinjaman  = $semuaPinjaman->count();
         $sedangDipinjam = $semuaPinjaman->where('status', 'dipinjam')->count();
         $sudahKembali   = $semuaPinjaman->where('status', 'dikembalikan')->count();
         $totalDenda     = $semuaPinjaman->sum('denda');
-    
+
         $peminjaman = \App\Models\Peminjaman::with('buku')
             ->where('user_id', $userId)
-            ->whereIn('status', ['menunggu', 'dipinjam']) // penting!
+            ->whereIn('status', ['menunggu', 'dipinjam', 'menunggu_kembali'])
             ->orderBy('tanggal_pinjam', 'desc')
             ->get();
-    
+
         $riwayatTerakhir = \App\Models\Peminjaman::with('buku')
             ->where('user_id', $userId)
             ->where('status', 'dikembalikan')
             ->latest()
             ->limit(3)
             ->get();
-    
+
         return view('anggota.dashboard', compact(
             'totalPinjaman',
             'sedangDipinjam',
@@ -81,6 +81,7 @@ class AnggotaController extends Controller
     {
         $data = Peminjaman::with('buku')
             ->where('user_id', Auth::id())
+            ->whereIn('status', ['dipinjam', 'terlambat', 'menunggu_kembali'])
             ->latest()
             ->get();
 
@@ -171,9 +172,8 @@ public function pinjam($id)
         return back()->with('error', 'Kamu sudah mengajukan atau sedang meminjam buku ini.');
     }
 
-    dd([
-    'status_dikirim' => 'menunggu'
-    ]);
+
+
 
     //SIMPAN SEBAGAI MENUNGGU
     Peminjaman::create([
@@ -183,23 +183,24 @@ public function pinjam($id)
         'status' => 'menunggu'
     ]);
 
-   
+
 
     return back()->with('success', 'Permintaan peminjaman dikirim, tunggu konfirmasi petugas.');
 }
 
-    // KEMBALIKAN BUKU
+        // KEMBALIKAN BUKU
     public function kembali($id)
     {
         $pinjam = Peminjaman::findOrFail($id);
 
+        if ($pinjam->status !== 'dipinjam') {
+            return back()->with('error', 'Status tidak valid.');
+        }
+
         $pinjam->update([
-            'status' => 'dikembalikan',
-            'tanggal_kembali' => now()
+            'status' => 'menunggu_kembali'
         ]);
 
-        $pinjam->buku->increment('stok');
-
-        return back()->with('success', 'Buku berhasil dikembalikan');
+        return back()->with('success', 'Menunggu konfirmasi petugas.');
     }
 }

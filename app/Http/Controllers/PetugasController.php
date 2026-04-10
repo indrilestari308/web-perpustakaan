@@ -156,6 +156,32 @@ public function dashboard()
         return back()->with('success', 'Peminjaman berhasil dikonfirmasi.');
     }
 
+public function konfirmasiPengembalian($id)
+{
+    $pinjam = Peminjaman::findOrFail($id);
+
+    if ($pinjam->status !== 'menunggu_kembali') {
+        return back()->with('error', 'Status tidak valid.');
+    }
+
+    $today = Carbon::today();
+    $batas = Carbon::parse($pinjam->batas_kembali);
+
+    $hariTelat = $today->gt($batas) ? $today->diffInDays($batas) : 0;
+    $denda = $hariTelat * 1000;
+
+    $pinjam->update([
+        'status' => 'dikembalikan',
+        'tanggal_kembalikan' => $today,
+        'denda' => $denda
+    ]);
+
+    // 🔥 WAJIB: balikin stok
+    $pinjam->buku->increment('stok');
+
+    return back()->with('success', 'Pengembalian berhasil dikonfirmasi.');
+}
+
     // ─── TOLAK PEMINJAMAN ────────────────────────────────────
     public function tolak($id)
     {
@@ -187,7 +213,7 @@ public function dashboard()
 
         $pinjam->update([
             'status'               => 'dikembalikan',
-            'tanggal_dikembalikan' => $hariIni,
+            'tanggal_kembali' => $hariIni,
             'denda'                => $denda,
         ]);
 

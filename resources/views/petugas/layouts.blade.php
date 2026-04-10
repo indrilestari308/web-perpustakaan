@@ -387,10 +387,7 @@
         </div>
         <div class="user-info">
             <span>Halo, {{ auth()->user()->name ?? 'Petugas' }}</span>
-            <img src="{{ auth()->user()->foto
-                    ? asset('storage/' . auth()->user()->foto)
-                    : 'https://i.pravatar.cc/40?u=' . auth()->id() }}"
-                 class="user-avatar">
+            
         </div>
     </div>
 

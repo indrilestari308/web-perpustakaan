@@ -19,51 +19,49 @@ class BukuController extends Controller
     {
         $buku = Buku::with('kategori')->findOrFail($id);
         return view('anggota.detail', compact('buku'));
-    }    
-
-    // FORM TAMBAH
-public function create()
-{
-    $kategori = Kategori::all(); // singular biar rapi
-    return view('petugas.buku.create', compact('kategori'));
-}
-
-    // SIMPAN DATA
-public function store(Request $request)
-{
-    $request->validate([
-        'judul' => 'required',
-        'penulis' => 'required',
-        'penerbit' => 'required',
-        'tahun_terbit' => 'required',
-        'stok' => 'required|integer',
-        'kategori_id' => 'required',
-        'gambar' => 'image|mimes:jpg,jpeg,png|max:2048'
-    ]);
-
-    $gambar = null;
-
-    if ($request->hasFile('gambar')) {
-        $gambar = $request->file('gambar')->store('buku', 'public');
     }
 
-    Buku::create([
-        'judul' => $request->judul,
-        'penulis' => $request->penulis,
-        'penerbit' => $request->penerbit,
-        'tahun_terbit' => $request->tahun_terbit,
-        'stok' => $request->stok,
-        'kategori_id' => $request->kategori_id,
-        'gambar' => $gambar,
+    // FORM TAMBAH
+    public function create()
+    {
+        $kategori = Kategori::all();
+        return view('petugas.buku.create', compact('kategori'));
+    }
 
-        // 🔥 INI YANG WAJIB DITAMBAH
-        'bahasa' => $request->bahasa,
-        'jumlah_halaman' => $request->jumlah_halaman,
-        'sinopsis' => $request->sinopsis,
-    ]);
+    // SIMPAN DATA
+    public function store(Request $request)
+    {
+        $request->validate([
+            'judul' => 'required|unique:buku,judul',
+            'penulis' => 'required',
+            'penerbit' => 'required',
+            'tahun_terbit' => 'required',
+            'stok' => 'required|integer',
+            'kategori_id' => 'required',
+            'gambar' => 'image|mimes:jpg,jpeg,png|max:2048'
+        ]);
 
-    return redirect()->route('buku.index')->with('success', 'Buku berhasil ditambahkan');
-}
+        $gambar = null;
+
+        if ($request->hasFile('gambar')) {
+            $gambar = $request->file('gambar')->store('buku', 'public');
+        }
+
+        Buku::create([
+            'judul' => $request->judul,
+            'penulis' => $request->penulis,
+            'penerbit' => $request->penerbit,
+            'tahun_terbit' => $request->tahun_terbit,
+            'stok' => $request->stok,
+            'kategori_id' => $request->kategori_id,
+            'gambar' => $gambar,
+            'bahasa' => $request->bahasa,
+            'jumlah_halaman' => $request->jumlah_halaman,
+            'sinopsis' => $request->sinopsis,
+        ]);
+
+        return redirect()->route('buku.index')->with('success', 'Buku berhasil ditambahkan');
+    }
 
     // FORM EDIT
     public function edit(string $id)
@@ -103,7 +101,10 @@ public function store(Request $request)
             'tahun_terbit' => $request->tahun_terbit,
             'stok' => $request->stok,
             'kategori_id' => $request->kategori_id,
-            'gambar' => $gambar
+            'gambar' => $gambar,
+            'bahasa' => $request->bahasa,
+            'jumlah_halaman' => $request->jumlah_halaman,
+            'sinopsis' => $request->sinopsis,
         ]);
 
         return redirect()->route('buku.index')->with('success', 'Buku berhasil diupdate');
@@ -121,53 +122,51 @@ public function store(Request $request)
     public function indexAnggota(Request $request)
     {
         $query = Buku::with('kategori')->latest();
-    
+
         if ($request->filled('cari')) {
             $query->where(function($q) use ($request) {
                 $q->where('judul', 'like', '%'.$request->cari.'%')
                   ->orWhere('penulis', 'like', '%'.$request->cari.'%');
             });
         }
-    
+
         if ($request->filled('kategori')) {
             $query->where('kategori_id', $request->kategori);
         }
-    
+
         $buku = $query->paginate(12);
         $kategoriList = \App\Models\Kategori::all();
-    
+
         return view('anggota.buku', compact('buku', 'kategoriList'));
     }
-    
-  public function pinjam($id)
-{
-    $buku = Buku::findOrFail($id);
 
-    if ($buku->stok <= 0) {
-        return redirect()->back()->with('error', 'Stok buku habis.');
+    public function pinjam($id)
+    {
+        $buku = Buku::findOrFail($id);
+
+        if ($buku->stok <= 0) {
+            return redirect()->back()->with('error', 'Stok buku habis.');
+        }
+
+        // CEK biar ga double
+        $sudahPinjam = \App\Models\Peminjaman::where('user_id', auth()->id())
+            ->where('buku_id', $id)
+            ->whereIn('status', ['menunggu', 'dipinjam'])
+            ->exists();
+
+        if ($sudahPinjam) {
+            return redirect()->back()->with('error', 'Kamu sudah mengajukan atau meminjam buku ini.');
+        }
+
+        \App\Models\Peminjaman::create([
+            'user_id'        => auth()->id(),
+            'buku_id'        => $id,
+            'tanggal_pinjam' => null,  // ✅ diisi petugas saat konfirmasi
+            'batas_kembali'  => null,  // ✅ diisi petugas saat konfirmasi
+            'status'         => 'menunggu',
+            'denda'          => 0,
+        ]);
+
+        return redirect()->back()->with('success', 'Permintaan peminjaman dikirim, tunggu konfirmasi petugas.');
     }
-
-    // 🔥 CEK biar ga double
-    $sudahPinjam = \App\Models\Peminjaman::where('user_id', auth()->id())
-        ->where('buku_id', $id)
-        ->whereIn('status', ['menunggu', 'dipinjam'])
-        ->exists();
-
-    if ($sudahPinjam) {
-        return redirect()->back()->with('error', 'Kamu sudah mengajukan atau meminjam buku ini.');
-    }
-
-    \App\Models\Peminjaman::create([
-        'user_id'         => auth()->id(),
-        'buku_id'         => $id,
-        'tanggal_pinjam'  => now(),
-        'tanggal_kembali' => now()->addDays(7),
-        'status'          => 'menunggu', // 🔥 INI YANG PENTING
-        'denda'           => 0,
-    ]);
-
-   
-
-    return redirect()->back()->with('success', 'Permintaan peminjaman dikirim, tunggu konfirmasi petugas.');
-}
 }
