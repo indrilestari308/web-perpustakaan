@@ -152,7 +152,7 @@
 <div class="sidebar">
     <div class="sidebar-brand">
         <i class="bi bi-journal-bookmark-fill"></i>
-        <span>Perpustakaan</span>
+        <span>LibTrack</span>
     </div>
 
     <div class="sidebar-label">Menu</div>

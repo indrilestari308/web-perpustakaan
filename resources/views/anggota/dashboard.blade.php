@@ -251,7 +251,7 @@
 
     @forelse($peminjamanAktif ?? [] as $item)
     @php
-        $batas = \Carbon\Carbon::parse($item->tanggal_kembali);
+        $batas = \Carbon\Carbon::parse($item->batas_kembali);
         $terlambat = now()->gt($batas);
     @endphp
     <div class="book-row">

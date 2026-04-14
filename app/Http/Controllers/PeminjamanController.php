@@ -19,20 +19,24 @@ class PeminjamanController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $hariIni = Carbon::now();
+        $sedangDipinjam = $peminjaman->whereIn('status', ['dipinjam', 'menunggu_kembali'])->count();
 
-        $sedangDipinjam = $peminjaman->where('status', 'dipinjam')->count();
-
-        $terlambat = $peminjaman->filter(function ($item) use ($hariIni) {
-            return $item->status == 'dipinjam' &&
-                   $hariIni->gt(Carbon::parse($item->batas_kembali)); // ✅ fix
+        $terlambat = $peminjaman->filter(function ($item) {
+            return in_array($item->status, ['dipinjam', 'menunggu_kembali']) &&
+                   Carbon::now()->gt(Carbon::parse($item->batas_kembali));
         })->count();
 
-        $totalDenda = $peminjaman->sum(function ($item) use ($hariIni) {
-            if ($item->status != 'dipinjam') return 0;
+        $totalDenda = $peminjaman->sum(function ($item) {
+            if (!in_array($item->status, ['dipinjam', 'menunggu_kembali'])) return 0;
 
-            $batas = Carbon::parse($item->batas_kembali); // ✅ fix
-            $hari  = $hariIni->gt($batas) ? $hariIni->diffInDays($batas) : 0;
+            $acuan = ($item->status === 'menunggu_kembali' && $item->tanggal_kembalikan)
+                ? Carbon::parse($item->tanggal_kembalikan)
+                : Carbon::now();
+
+            $batas = Carbon::parse($item->batas_kembali);
+            $hari = $acuan->gt($batas)
+                ? (int) $batas->startOfDay()->diffInDays($acuan->startOfDay())
+                : 0;
             return $hari * 1000;
         });
 
@@ -48,10 +52,10 @@ class PeminjamanController extends Controller
     public function store(Request $request)
     {
         Peminjaman::create([
-            'user_id'      => auth()->id(),
-            'buku_id'      => $request->buku_id,
+            'user_id'        => auth()->id(),
+            'buku_id'        => $request->buku_id,
             'tanggal_pinjam' => null,
-            'batas_kembali'  => now()->addDays(7), // ✅ fix (sesuai kolom DB)
+            'batas_kembali'  => now()->addDays(7),
             'status'         => 'menunggu',
         ]);
 
@@ -59,46 +63,47 @@ class PeminjamanController extends Controller
     }
 
     // 🔁 KEMBALIKAN (Anggota)
-public function kembali($id)
-{
-    $peminjaman = Peminjaman::where('id', $id)
-        ->where('user_id', auth()->id())
-        ->firstOrFail();
+    public function kembali($id)
+    {
+        $peminjaman = Peminjaman::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
-    if ($peminjaman->status !== 'dipinjam') {
-        return back()->with('error', 'Status tidak valid.');
+        if ($peminjaman->status !== 'dipinjam') {
+            return back()->with('error', 'Status tidak valid.');
+        }
+
+        $hariIni = Carbon::now();
+        $batas   = Carbon::parse($peminjaman->batas_kembali);
+
+        $hari = $hariIni->gt($batas)
+            ? (int) $batas->startOfDay()->diffInDays($hariIni->startOfDay())
+            : 0;
+        $denda   = $hari * 1000;
+        $peminjaman->update([
+            'status'             => 'menunggu_kembali',
+            'tanggal_kembalikan' => null, // ← kosong dulu
+            'denda'              => 0,
+        ]);
+
+        return back()->with('success', 'Permintaan pengembalian terkirim, menunggu konfirmasi petugas.' .
+            ($hari > 0 ? ' | Estimasi denda: Rp ' . number_format($denda, 0, ',', '.') : '')
+        );
     }
 
-    $hariIni = Carbon::now();
-    $batas   = Carbon::parse($peminjaman->batas_kembali);
-    $terlambat = $hariIni->gt($batas) ? $hariIni->diffInDays($batas) : 0;
-
-    $peminjaman->update([
-        'status'             => 'menunggu_kembali',
-        'tanggal_kembalikan' => $hariIni,
-        'denda'              => $terlambat * 1000,
-    ]);
-
-    // ❌ HAPUS buku->increment('stok') dari sini
-
-    return back()->with('success', 'Permintaan pengembalian terkirim, menunggu konfirmasi petugas.' .
-        ($terlambat > 0 ? ' | Estimasi denda: Rp ' . number_format($terlambat * 1000, 0, ',', '.') : '')
-    );
-}
-
-    // 📜 RIWAYAT
+    //  RIWAYAT
     public function riwayat(Request $request)
     {
         $userId = auth()->id();
 
         $query = Peminjaman::with('buku')
             ->where('user_id', $userId)
-            ->whereIn('status', ['dipinjam', 'dikembalikan', 'ditolak']);
+            ->whereIn('status', ['dikembalikan', 'ditolak']);
 
         if ($request->filled('status')) {
             if ($request->status === 'terlambat') {
                 $query->where('status', 'dikembalikan')
-                      ->whereColumn('tanggal_kembalikan', '>', 'batas_kembali'); // ✅ fix
+                      ->whereColumn('tanggal_kembalikan', '>', 'batas_kembali');
             } else {
                 $query->where('status', $request->status);
             }
@@ -119,7 +124,7 @@ public function kembali($id)
         $pernahTerlambat = $semua->filter(function ($item) {
             if (!$item->tanggal_kembalikan) return false;
             return Carbon::parse($item->tanggal_kembalikan)
-                ->gt(Carbon::parse($item->batas_kembali)); // ✅ fix
+                ->gt(Carbon::parse($item->batas_kembali));
         })->count();
 
         return view('anggota.riwayat', compact(
@@ -139,7 +144,7 @@ public function kembali($id)
 
         if ($activeTab === 'terlambat') {
             $query->where('status', 'dipinjam')
-                  ->where('batas_kembali', '<', $hariIni); // ✅ fix
+                  ->where('batas_kembali', '<', $hariIni);
         } else {
             $query->where('status', $activeTab);
         }
@@ -161,7 +166,7 @@ public function kembali($id)
         $jumlahMenunggu  = Peminjaman::where('status', 'menunggu')->count();
         $jumlahDipinjam  = Peminjaman::where('status', 'dipinjam')->count();
         $jumlahTerlambat = Peminjaman::where('status', 'dipinjam')
-                                     ->where('batas_kembali', '<', $hariIni) // ✅ fix
+                                     ->where('batas_kembali', '<', $hariIni)
                                      ->count();
         $jumlahKembali   = Peminjaman::where('status', 'menunggu_kembali')->count();
         $jumlahSelesai   = Peminjaman::where('status', 'dikembalikan')->count();
@@ -189,7 +194,7 @@ public function kembali($id)
         $peminjaman->update([
             'status'         => 'dipinjam',
             'tanggal_pinjam' => Carbon::now(),
-            'batas_kembali'  => Carbon::now()->addDays(7), // ✅ set saat dikonfirmasi
+            'batas_kembali'  => Carbon::now()->addDays(7),
         ]);
 
         if ($peminjaman->buku) {
@@ -218,22 +223,30 @@ public function konfirmasiPengembalian($id)
 {
     $peminjaman = Peminjaman::findOrFail($id);
 
-    // ✅ Cek status menunggu_kembali, bukan dipinjam
     if ($peminjaman->status !== 'menunggu_kembali') {
         return back()->with('error', 'Status tidak valid.');
     }
 
+    $tanggalKembali = Carbon::now(); // ← waktu petugas konfirmasi
+    $batas          = Carbon::parse($peminjaman->batas_kembali);
+
+    $hari = $tanggalKembali->gt($batas)
+        ? (int) $batas->startOfDay()->diffInDays($tanggalKembali->copy()->startOfDay())
+        : 0;
+    $denda = $hari * 1000;
+
     $peminjaman->update([
-        'status' => 'dikembalikan',
+        'status'             => 'dikembalikan',
+        'tanggal_kembalikan' => Carbon::now(), // ← diisi di sini
+        'denda'              => $denda,
     ]);
 
-    // ✅ Stok bertambah di sini, saat petugas konfirmasi
     if ($peminjaman->buku) {
         $peminjaman->buku->increment('stok');
     }
 
     return back()->with('success', 'Pengembalian dikonfirmasi.' .
-        ($peminjaman->denda > 0 ? ' | Denda: Rp ' . number_format($peminjaman->denda, 0, ',', '.') : '')
+        ($denda > 0 ? ' | Denda: Rp ' . number_format($denda, 0, ',', '.') : ' | Tidak ada denda.')
     );
 }
 }

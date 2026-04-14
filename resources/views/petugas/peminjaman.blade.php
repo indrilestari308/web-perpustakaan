@@ -4,18 +4,16 @@
 
 @section('content')
 
-
-
 <div class="card" style="border-radius:12px; overflow:hidden;">
 
     {{-- ─── TABS ─── --}}
     <div class="nav-tabs-custom">
         @foreach([
-            ['tab' => 'menunggu',     'label' => 'Menunggu Konfirmasi', 'count' => $jumlahMenunggu,  'cls' => 'tab-count-warning'],
-            ['tab' => 'dipinjam',     'label' => 'Sedang Dipinjam',     'count' => $jumlahDipinjam,  'cls' => 'tab-count-info'],
-            ['tab' => 'terlambat',    'label' => 'Terlambat',           'count' => $jumlahTerlambat, 'cls' => 'tab-count-danger'],
-            ['tab' => 'menunggu_kembali','label' => 'Menunggu Pengembalian','count' => $jumlahKembali,  'cls' => 'tab-count-warning'],
-            ['tab' => 'dikembalikan', 'label' => 'Selesai',             'count' => $jumlahSelesai,   'cls' => 'tab-count-success'],
+            ['tab' => 'menunggu',        'label' => 'Menunggu Konfirmasi',  'count' => $jumlahMenunggu,  'cls' => 'tab-count-warning'],
+            ['tab' => 'dipinjam',        'label' => 'Sedang Dipinjam',      'count' => $jumlahDipinjam,  'cls' => 'tab-count-info'],
+            ['tab' => 'terlambat',       'label' => 'Terlambat',            'count' => $jumlahTerlambat, 'cls' => 'tab-count-danger'],
+            ['tab' => 'menunggu_kembali','label' => 'Menunggu Pengembalian','count' => $jumlahKembali,   'cls' => 'tab-count-warning'],
+            ['tab' => 'dikembalikan',    'label' => 'Selesai',              'count' => $jumlahSelesai,   'cls' => 'tab-count-success'],
         ] as $t)
         <a href="{{ request()->fullUrlWithQuery(['tab' => $t['tab'], 'page' => 1]) }}"
            class="nav-link {{ $activeTab === $t['tab'] ? 'active' : '' }}">
@@ -75,6 +73,10 @@
                         <th>Keterlambatan</th>
                         <th>Est. Denda</th>
                     @endif
+                    @if($activeTab === 'menunggu_kembali')
+                        <th>Tgl Dikembalikan</th>
+                        <th>Est. Denda</th>
+                    @endif
                     <th>Status</th>
                     <th style="width:170px;">Aksi</th>
                 </tr>
@@ -88,12 +90,8 @@
 
                     {{-- Anggota --}}
                     <td>
-                        <div style="font-size:13.5px; font-weight:500;">
-                            {{ $item->user->name }}
-                        </div>
-                        <div style="font-size:11px; color:#94a3b8;">
-                            {{ $item->user->email }}
-                        </div>
+                        <div style="font-size:13.5px; font-weight:500;">{{ $item->user->name }}</div>
+                        <div style="font-size:11px; color:#94a3b8;">{{ $item->user->email }}</div>
                     </td>
 
                     {{-- Buku --}}
@@ -111,9 +109,13 @@
                             : '-' }}
                     </td>
 
-                    {{-- Tgl Kembali --}}
+                    {{-- Tgl Kembali (batas) --}}
                     <td style="font-size:13px;">
-                        {{ \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}
+                        @if($item->status === 'menunggu')
+                            <span style="color:#94a3b8;">-</span>
+                        @else
+                            {{ \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}
+                        @endif
                     </td>
 
                     {{-- Kolom tambahan: Selesai --}}
@@ -129,7 +131,7 @@
                                     Rp {{ number_format($item->denda, 0, ',', '.') }}
                                 </span>
                             @else
-                                <span style="color:#22c55e;">-</span>
+                                <span style="color:#22c55e;">Rp 0</span>
                             @endif
                         </td>
                     @endif
@@ -137,10 +139,11 @@
                     {{-- Kolom tambahan: Terlambat --}}
                     @if($activeTab === 'terlambat')
                         @php
-                            $hariTerlambat = \Carbon\Carbon::today()
-                                ->diffInDays(\Carbon\Carbon::parse($item->batas_kembali));
-                            $estDenda = $hariTerlambat * 1000;
+                            $batasTerlambat  = \Carbon\Carbon::parse($item->batas_kembali)->startOfDay();
+                            $hariTerlambat   = (int) $batasTerlambat->diffInDays(\Carbon\Carbon::today());
+                            $estDenda        = $hariTerlambat * 1000;
                         @endphp
+
                         <td>
                             <span style="font-size:13px; color:#ef4444; font-weight:600;">
                                 {{ $hariTerlambat }} hari
@@ -153,14 +156,43 @@
                         </td>
                     @endif
 
+                    {{-- Kolom tambahan: Menunggu Kembali --}}
+                    @if($activeTab === 'menunggu_kembali')
+                        @php
+                            $tglKembaliItem  = $item->tanggal_kembalikan
+                                ? \Carbon\Carbon::parse($item->tanggal_kembalikan)
+                                : \Carbon\Carbon::today();
+                            $batasItem       = \Carbon\Carbon::parse($item->batas_kembali);
+                            $hariTerlambat   = $tglKembaliItem->gt($batasItem)
+                                ? (int) $batasItem->diffInDays($tglKembaliItem)
+                                : 0;
+                            $estDenda        = $hariTerlambat * 1000;
+                        @endphp
+                        <td style="font-size:13px;">
+                            {{ $item->tanggal_kembalikan
+                                ? \Carbon\Carbon::parse($item->tanggal_kembalikan)->format('d M Y')
+                                : '-' }}
+                        </td>
+                        <td style="font-size:13px;">
+                            @if($estDenda > 0)
+                                <span style="color:#ef4444; font-weight:600;">
+                                    Rp {{ number_format($estDenda, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span style="color:#22c55e;">Rp 0</span>
+                            @endif
+                        </td>
+                    @endif
+
                     {{-- Status Badge --}}
                     <td>
                         @php
                             $badgeMap = [
-                                'menunggu'     => ['badge-menunggu',     'Menunggu'],
-                                'dipinjam'     => ['badge-dipinjam',     'Dipinjam'],
-                                'terlambat'    => ['badge-terlambat',    'Terlambat'],
-                                'dikembalikan' => ['badge-dikembalikan', 'Dikembalikan'],
+                                'menunggu'         => ['badge-menunggu',     'Menunggu'],
+                                'dipinjam'         => ['badge-dipinjam',     'Dipinjam'],
+                                'menunggu_kembali' => ['badge-menunggu',     'Menunggu Kembali'],
+                                'dikembalikan'     => ['badge-dikembalikan', 'Dikembalikan'],
+                                'ditolak'          => ['badge-terlambat',    'Ditolak'],
                             ];
                             [$badgeCls, $badgeLabel] = $badgeMap[$item->status] ?? ['badge-dipinjam', $item->status];
                         @endphp
@@ -168,19 +200,19 @@
                     </td>
 
                     {{-- Aksi --}}
-
                     <td>
-                        @if($item->status == 'menunggu')
-                        <form action="{{ route('peminjaman.konfirmasi', $item->id) }}" method="POST"
-                            onsubmit="return confirm('Setujui peminjaman ini?')">
-                            @csrf
-                            @method('PUT')
-                            <button class="btn btn-primary btn-sm">
-                                <i class="bi bi-check-circle me-1"></i>Konfirmasi
-                            </button>
-                        </form>
-                        @endif
                         <div class="d-flex gap-1 align-items-center flex-wrap">
+
+                            @if($item->status == 'menunggu')
+                            <form action="{{ route('peminjaman.konfirmasi', $item->id) }}" method="POST"
+                                onsubmit="return confirm('Setujui peminjaman ini?')">
+                                @csrf
+                                @method('PUT')
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="bi bi-check-circle me-1"></i>Konfirmasi
+                                </button>
+                            </form>
+                            @endif
 
                             @if($item->status == 'menunggu_kembali')
                             <form action="{{ route('konfirmasiPengembalian', $item->id) }}" method="POST"
@@ -204,12 +236,13 @@
                                     data-buku="{{ $item->buku->judul }}"
                                     data-kategori="{{ $item->buku->kategori->nama_kategori ?? '-' }}"
                                     data-pinjam="{{ $item->tanggal_pinjam ? \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') : '-' }}"
-                                    data-kembali="{{ \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}"
-                                    data-dikembalikan="{{ $item->tanggal_kembalikan ? \Carbon\Carbon::parse($item->batas_kembalikan)->format('d M Y') : '-' }}"
+                                    data-kembali="{{ $item->status === 'menunggu' ? '-' : \Carbon\Carbon::parse($item->batas_kembali)->format('d M Y') }}"
+                                    data-dikembalikan="{{ $item->tanggal_kembalikan ? \Carbon\Carbon::parse($item->tanggal_kembalikan)->format('d M Y') : '-' }}"
                                     data-status="{{ $item->status }}"
                                     data-denda="{{ $item->denda > 0 ? 'Rp ' . number_format($item->denda, 0, ',', '.') : '-' }}">
                                 <i class="bi bi-eye"></i>
                             </button>
+
                         </div>
                     </td>
                 </tr>
@@ -226,11 +259,31 @@
     </div>
 
     {{-- Pagination --}}
-    @if($peminjaman->hasPages())
-        <div style="padding:14px 18px; border-top:1px solid #f1f5f9;">
-            {{ $peminjaman->appends(request()->query())->links() }}
-        </div>
+ <div class="d-flex justify-content-end gap-1 mt-3">
+
+    {{-- PREV --}}
+    @if ($peminjaman->onFirstPage())
+        <span class="btn btn-sm btn-light disabled">‹</span>
+    @else
+        <a href="{{ $peminjaman->appends(request()->query())->previousPageUrl() }}" class="btn btn-sm btn-light">‹</a>
     @endif
+
+    {{-- PAGE --}}
+    @for ($i = 1; $i <= $peminjaman->lastPage(); $i++)
+        <a href="{{ $peminjaman->appends(request()->query())->url($i) }}"
+           class="btn btn-sm {{ $i == $peminjaman->currentPage() ? 'btn-primary' : 'btn-light' }}">
+            {{ $i }}
+        </a>
+    @endfor
+
+    {{-- NEXT --}}
+    @if ($peminjaman->hasMorePages())
+        <a href="{{ $peminjaman->appends(request()->query())->nextPageUrl() }}" class="btn btn-sm btn-light">›</a>
+    @else
+        <span class="btn btn-sm btn-light disabled">›</span>
+    @endif
+
+</div>
 
 </div>
 
@@ -256,9 +309,7 @@
                         <div id="modal-avatar"
                              style="width:42px;height:42px;border-radius:50%;background:#dbeafe;color:#1e40af;
                                     font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;
-                                    flex-shrink:0;">
-                            ?
-                        </div>
+                                    flex-shrink:0;">?</div>
                         <div>
                             <div style="font-size:14px;font-weight:600;color:#0f172a;" id="modal-nama">-</div>
                             <div style="font-size:12px;color:#64748b;" id="modal-email">-</div>
@@ -332,6 +383,8 @@
         color: #94a3b8;
         margin-bottom: 10px;
     }
+
+
 </style>
 @endpush
 
@@ -353,33 +406,29 @@ document.addEventListener('DOMContentLoaded', function () {
         const status       = btn.dataset.status;
         const denda        = btn.dataset.denda;
 
-        // Isi data
-        document.getElementById('modal-avatar').textContent   = nama.substring(0, 2).toUpperCase();
-        document.getElementById('modal-nama').textContent     = nama;
-        document.getElementById('modal-email').textContent    = email;
-        document.getElementById('modal-buku').textContent     = buku;
-        document.getElementById('modal-kategori').textContent = kategori;
-        document.getElementById('modal-pinjam').textContent   = pinjam;
-        document.getElementById('modal-kembali').textContent  = kembali;
+        document.getElementById('modal-avatar').textContent      = nama.substring(0, 2).toUpperCase();
+        document.getElementById('modal-nama').textContent        = nama;
+        document.getElementById('modal-email').textContent       = email;
+        document.getElementById('modal-buku').textContent        = buku;
+        document.getElementById('modal-kategori').textContent    = kategori;
+        document.getElementById('modal-pinjam').textContent      = pinjam;
+        document.getElementById('modal-kembali').textContent     = kembali;
         document.getElementById('modal-dikembalikan').textContent = dikembalikan;
 
-        // Sembunyikan kolom dikembalikan kalau belum
         document.getElementById('wrap-dikembalikan').style.display =
             dikembalikan === '-' ? 'none' : 'block';
 
-        // Badge status
         const statusMap = {
-            'menunggu':     ['badge-menunggu',     'Menunggu Konfirmasi'],
-            'dipinjam':     ['badge-dipinjam',     'Sedang Dipinjam'],
-            'terlambat':    ['badge-terlambat',    'Terlambat'],
-            'dikembalikan': ['badge-dikembalikan', 'Sudah Dikembalikan'],
-            'ditolak':      ['badge-terlambat',    'Ditolak'],
+            'menunggu':         ['badge-menunggu',     'Menunggu Konfirmasi'],
+            'dipinjam':         ['badge-dipinjam',     'Sedang Dipinjam'],
+            'menunggu_kembali': ['badge-menunggu',     'Menunggu Kembali'],
+            'dikembalikan':     ['badge-dikembalikan', 'Sudah Dikembalikan'],
+            'ditolak':          ['badge-terlambat',    'Ditolak'],
         };
         const [cls, label] = statusMap[status] ?? ['badge-dipinjam', status];
         document.getElementById('modal-status-wrap').innerHTML =
             `<span class="badge-status ${cls}">${label}</span>`;
 
-        // Denda
         const dendaWrap = document.getElementById('modal-denda-wrap');
         dendaWrap.textContent = denda !== '-' ? `Denda: ${denda}` : '';
     });

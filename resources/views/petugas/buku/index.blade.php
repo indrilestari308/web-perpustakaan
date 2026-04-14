@@ -322,9 +322,7 @@
 <!-- HEADER -->
 <div class="page-header">
     <h1 class="page-title">
-        <span class="icon-wrap"><i class="bi bi-book"></i></span>
-        Data Buku
-    </h1>
+  
     <a href="{{ route('buku.create') }}" class="btn-add">
         <i class="bi bi-plus-lg"></i> Tambah Buku
     </a>
@@ -474,16 +472,52 @@
         </table>
     </div>
 
-    <!-- FOOTER PAGINATION -->
-    @if(method_exists($buku, 'links') && $buku->lastPage() > 1)
-    <div class="table-footer">
-        <span>
-            Menampilkan {{ $buku->firstItem() }}–{{ $buku->lastItem() }}
-            dari {{ $buku->total() }} buku
-        </span>
-        <div>{{ $buku->links() }}</div>
+
+<!-- FOOTER PAGINATION -->
+@if(method_exists($buku, 'links') && $buku->lastPage() > 1)
+<div class="table-footer">
+    <span>
+        Menampilkan {{ $buku->firstItem() }}–{{ $buku->lastItem() }}
+        dari {{ $buku->total() }} buku
+    </span>
+    <div class="d-flex gap-1 align-items-center">
+        {{-- Prev --}}
+        @if($buku->onFirstPage())
+            <span class="btn-icon btn-icon-edit" style="opacity:0.4; cursor:not-allowed;">
+                <i class="bi bi-chevron-left"></i>
+            </span>
+        @else
+            <a href="{{ $buku->previousPageUrl() }}" class="btn-icon btn-icon-edit">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        @endif
+
+        {{-- Nomor halaman --}}
+        @for($i = 1; $i <= $buku->lastPage(); $i++)
+            <a href="{{ $buku->url($i) }}"
+               class="btn-icon"
+               style="
+                   {{ $i == $buku->currentPage()
+                       ? 'background:var(--primary); color:#fff; border-color:var(--primary);'
+                       : 'background:#f1f5f9; color:var(--text-muted); border-color:var(--border);' }}
+               ">
+                {{ $i }}
+            </a>
+        @endfor
+
+        {{-- Next --}}
+        @if($buku->hasMorePages())
+            <a href="{{ $buku->nextPageUrl() }}" class="btn-icon btn-icon-edit">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        @else
+            <span class="btn-icon btn-icon-edit" style="opacity:0.4; cursor:not-allowed;">
+                <i class="bi bi-chevron-right"></i>
+            </span>
+        @endif
     </div>
-    @endif
+</div>
+@endif
 
 </div>
 

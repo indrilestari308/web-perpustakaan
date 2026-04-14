@@ -267,34 +267,7 @@
     }
 </style>
 
-@php
-    $hour = (int) now()->format('H');
-    $sapa = $hour < 11 ? 'pagi' : ($hour < 15 ? 'siang' : ($hour < 18 ? 'sore' : 'malam'));
-    $namaHari = [
-        'Sunday'    => 'Minggu',
-        'Monday'    => 'Senin',
-        'Tuesday'   => 'Selasa',
-        'Wednesday' => 'Rabu',
-        'Thursday'  => 'Kamis',
-        'Friday'    => 'Jumat',
-        'Saturday'  => 'Sabtu',
-    ][now()->format('l')];
 
-    $bulan = [
-        1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
-        7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember',
-    ][(int) now()->format('n')];
-
-    $tanggal = $namaHari . ', ' . now()->format('j') . ' ' . $bulan . ' ' . now()->format('Y');
-@endphp
-
-<!-- GREETING -->
-<div class="dashboard-greeting">
-    <div class="greeting-name">
-        Selamat {{ $sapa }}, {{ Auth::user()->name ?? 'Petugas' }} 👋
-    </div>
-    <div class="greeting-sub">{{ $tanggal }}</div>
-</div>
 
 <!-- STAT CARDS -->
 <div class="stat-grid">

@@ -328,7 +328,7 @@
 <div class="sidebar">
     <a href="{{ route('petugas.dashboard') }}" class="sidebar-brand">
         <i class="bi bi-journal-bookmark-fill"></i>
-        <span>Perpustakaan</span>
+        <span>LibTrack</span>
     </a>
 
     {{-- Hitung pending sekali, dipakai sidebar & topbar --}}
@@ -387,7 +387,7 @@
         </div>
         <div class="user-info">
             <span>Halo, {{ auth()->user()->name ?? 'Petugas' }}</span>
-            
+
         </div>
     </div>
 

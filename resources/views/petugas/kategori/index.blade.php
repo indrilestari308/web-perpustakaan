@@ -5,12 +5,7 @@
 @section('content')
 
 <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h5 class="fw-bold mb-1" style="color:#0f172a;">Kelola Kategori</h5>
-        <p class="mb-0" style="font-size:13px; color:#64748b;">
-            Tambah, edit, dan hapus kategori buku perpustakaan
-        </p>
-    </div>
+    
     <button class="btn btn-primary btn-sm px-3"
             data-bs-toggle="modal" data-bs-target="#modalTambah">
         <i class="bi bi-plus-lg me-1"></i> Tambah Kategori

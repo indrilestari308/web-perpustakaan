@@ -212,24 +212,25 @@
             <tbody>
                 @foreach($peminjaman as $i => $item)
 @php
-    $hariIni = \Carbon\Carbon::today();
-    $batasKembali = \Carbon\Carbon::parse($item->batas_kembali);
+    $batasKembali   = $item->batas_kembali ? \Carbon\Carbon::parse($item->batas_kembali) : null;
+    $tanggalKembali = $item->tanggal_kembalikan ? \Carbon\Carbon::parse($item->tanggal_kembalikan) : null;
 
-    $tanggalKembali = $item->batas_kembalikan
-        ? \Carbon\Carbon::parse($item->batas_kembalikan)
-        : null;
-
-    if ($tanggalKembali) {
+    if ($batasKembali && $tanggalKembali) {
+        // Sudah dikembalikan — hitung dari tanggal kembali vs batas
         $terlambatHari = $tanggalKembali->gt($batasKembali)
-            ? $tanggalKembali->diffInDays($batasKembali)
+            ? (int) $batasKembali->diffInDays($tanggalKembali)
+            : 0;
+    } elseif ($batasKembali && in_array($item->status, ['dipinjam', 'menunggu_kembali'])) {
+        // Belum dikembalikan — hitung dari hari ini
+        $terlambatHari = \Carbon\Carbon::today()->gt($batasKembali)
+            ? (int) $batasKembali->diffInDays(\Carbon\Carbon::today())
             : 0;
     } else {
-        $terlambatHari = $hariIni->gt($batasKembali)
-            ? $hariIni->diffInDays($batasKembali)
-            : 0;
+        $terlambatHari = 0;
     }
 
-    $dendaHitung = $terlambatHari * 1000;
+    // ✅ Prioritaskan denda dari DB kalau sudah ada, kalau belum hitung manual
+    $dendaHitung = $item->denda > 0 ? $item->denda : ($terlambatHari * 1000);
 @endphp
 
 <tr>

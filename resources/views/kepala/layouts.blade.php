@@ -285,7 +285,7 @@
 <div class="sidebar">
     <a href="{{ route('kepala.dashboard') }}" class="sidebar-brand">
         <i class="bi bi-journal-bookmark-fill"></i>
-        <span>Perpustakaan</span>
+        <span>LibTrack</span>
     </a>
 
     <div class="sidebar-label">Menu</div>
@@ -333,7 +333,7 @@
         </div>
         <div class="user-info">
             <span>Halo, {{ auth()->user()->name ?? 'Kepala Perpus' }}</span>
-            
+
         </div>
     </div>
 

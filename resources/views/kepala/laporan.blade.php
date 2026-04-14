@@ -4,6 +4,7 @@
 
 @section('content')
 
+
 {{-- ─── FILTER ─── --}}
 <div class="card mb-4">
     <div class="card-header d-flex align-items-center gap-2">
@@ -198,9 +199,43 @@
         </table>
     </div>
 
-    <div class="px-3 pb-3">
-        {{ $laporan->withQueryString()->links() }}
+ <div class="d-flex justify-content-between align-items-center px-3 py-3 border-top">
+
+    <!-- kiri -->
+    <div style="font-size:13px; color:#64748b;">
+        Menampilkan {{ $laporan->firstItem() }} - {{ $laporan->lastItem() }}
+        dari {{ $laporan->total() }} data
     </div>
-</div>
+
+    <!-- kanan -->
+        <div class="d-flex gap-1">
+
+            {{-- PREV --}}
+            @if ($laporan->onFirstPage())
+                <span class="btn btn-sm btn-light disabled">‹</span>
+            @else
+                <a href="{{ $laporan->previousPageUrl() }}" class="btn btn-sm btn-light">‹</a>
+            @endif
+
+            {{-- PAGE --}}
+            @for ($i = 1; $i <= $laporan->lastPage(); $i++)
+                <a href="{{ $laporan->url($i) }}"
+                class="btn btn-sm {{ $i == $laporan->currentPage() ? 'btn-primary' : 'btn-light' }}">
+                    {{ $i }}
+                </a>
+            @endfor
+
+            {{-- NEXT --}}
+            @if ($laporan->hasMorePages())
+                <a href="{{ $laporan->nextPageUrl() }}" class="btn btn-sm btn-light">›</a>
+            @else
+                <span class="btn btn-sm btn-light disabled">›</span>
+            @endif
+
+        </div>
+    </div>
+
+
+
 
 @endsection

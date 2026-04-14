@@ -10,9 +10,7 @@
     gap: 20px;
     padding: 1.5rem 0;
 }
-@media (max-width: 768px) {
-    .page-profil { grid-template-columns: 1fr; }
-}
+@media (max-width: 768px) { .page-profil { grid-template-columns: 1fr; } }
 .card-profil {
     background: #fff;
     border: 1px solid #e8ecf0;
@@ -49,15 +47,17 @@
     border-bottom: 1px solid #e8ecf0;
     margin-bottom: 1.5rem;
 }
-.tab-bar a {
+.tab-bar button {
     padding: 8px 16px;
     font-size: 13px;
     color: #6c757d;
-    text-decoration: none;
+    background: none;
+    border: none;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
+    cursor: pointer;
 }
-.tab-bar a.active {
+.tab-bar button.active {
     color: #4e73df;
     border-bottom-color: #4e73df;
     font-weight: 500;
@@ -121,9 +121,9 @@
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
-@media (max-width: 480px) {
-    .form-row-2 { grid-template-columns: 1fr; }
-}
+@media (max-width: 480px) { .form-row-2 { grid-template-columns: 1fr; } }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 </style>
 
 <div class="page-profil">
@@ -138,9 +138,7 @@
         <p style="font-size:15px;font-weight:600;margin-bottom:4px;">{{ auth()->user()->name }}</p>
         <p style="font-size:13px;color:#6c757d;margin-bottom:12px;">{{ auth()->user()->email }}</p>
         <span class="badge-aktif">Aktif</span>
-
         <hr style="margin: 1.25rem 0; border-color: #f0f0f0;">
-
         <div>
             <div class="info-row">
                 <span style="color:#6c757d;">No. Anggota</span>
@@ -159,84 +157,110 @@
 
     {{-- FORM --}}
     <div class="card-profil">
+
         <div class="tab-bar">
-            <a href="#" class="active">Edit Profil</a>
-            <a href="#">Keamanan</a>
+            <button type="button" class="tab-btn {{ session('tab', 'profil') === 'profil' ? 'active' : '' }}" data-tab="tab-profil">Edit Profil</button>
+            <button type="button" class="tab-btn {{ session('tab') === 'keamanan' ? 'active' : '' }}" data-tab="tab-keamanan">Keamanan</button>
         </div>
 
-        {{-- NOTIF SUKSES --}}
+        {{-- NOTIF --}}
         @if(session('success'))
-            <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="font-size:13px;border-radius:10px;">
-                <i class="fas fa-check-circle"></i>
+            <div class="alert alert-success mb-3" style="font-size:13px;border-radius:10px;">
                 {{ session('success') }}
             </div>
         @endif
-
-        {{-- NOTIF ERROR --}}
         @if($errors->any())
             <div class="alert alert-danger mb-3" style="font-size:13px;border-radius:10px;">
                 <ul class="mb-0 ps-3">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
                 </ul>
             </div>
         @endif
 
-        <form action="{{ route('anggota.profil.update') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
+        {{-- TAB: EDIT PROFIL --}}
+        <div id="tab-profil" class="tab-content {{ session('tab', 'profil') === 'profil' ? 'active' : '' }}">
+            <form action="{{ route('anggota.profil.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="tab" value="profil">
 
-            <div class="form-row-2 mb-3">
-                <div>
-                    <label class="form-label-sm">Nama Lengkap</label>
-                    <input type="text" name="name" class="input-field @error('name') is-invalid @enderror"
-                           value="{{ old('name', auth()->user()->name) }}" required>
-                    @error('name')<div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div>@enderror
+                <div class="form-row-2 mb-3">
+                    <div>
+                        <label class="form-label-sm">Nama Lengkap</label>
+                        <input type="text" name="name" class="input-field" value="{{ old('name', auth()->user()->name) }}" required>
+                    </div>
+                    <div>
+                        <label class="form-label-sm">Email</label>
+                        <input type="email" name="email" class="input-field" value="{{ old('email', auth()->user()->email) }}" required>
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label-sm">Email</label>
-                    <input type="email" name="email" class="input-field @error('email') is-invalid @enderror"
-                           value="{{ old('email', auth()->user()->email) }}" required>
-                    @error('email')<div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div>@enderror
-                </div>
-            </div>
 
-            <div class="form-row-2 mb-3">
-                <div>
-                    <label class="form-label-sm">Password Baru</label>
-                    <input type="password" name="password" class="input-field @error('password') is-invalid @enderror"
-                           placeholder="Kosongkan jika tidak diubah">
-                    @error('password')<div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div>@enderror
+                <div class="mb-3">
+                    <label class="form-label-sm">Foto Profil</label>
+                    <div class="file-drop" onclick="document.getElementById('fotoInput').click()">
+                        <p style="font-size:13px;color:#6c757d;margin:0;">
+                            <span style="color:#4e73df;font-weight:500;">Pilih file</span> atau seret ke sini
+                        </p>
+                        <p style="font-size:12px;color:#adb5bd;margin:4px 0 0;">JPG, PNG · Maks 2MB</p>
+                        <p id="namaFile" style="font-size:12px;color:#4e73df;margin:4px 0 0;display:none;"></p>
+                    </div>
+                    <input type="file" id="fotoInput" name="foto" accept="image/*" style="display:none;"
+                           onchange="document.getElementById('namaFile').textContent=this.files[0]?.name; document.getElementById('namaFile').style.display='block'">
                 </div>
-                <div>
-                    <label class="form-label-sm">Konfirmasi Password</label>
-                    <input type="password" name="password_confirmation" class="input-field"
-                           placeholder="Ulangi password baru">
+
+                <div class="form-footer">
+                    <a href="{{ url()->previous() }}" class="btn btn-light" style="font-size:13px;border-radius:10px;">Batal</a>
+                    <button type="submit" class="btn-save">Simpan Perubahan</button>
                 </div>
-            </div>
+            </form>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label-sm">Foto Profil</label>
-                <div class="file-drop" onclick="document.getElementById('fotoInput').click()">
-                    <p style="font-size:13px;color:#6c757d;margin:0;">
-                        <span style="color:#4e73df;font-weight:500;">Pilih file</span> atau seret ke sini
-                    </p>
-                    <p style="font-size:12px;color:#adb5bd;margin:4px 0 0;">JPG, PNG · Maks 2MB</p>
-                    <p id="namaFile" style="font-size:12px;color:#4e73df;margin:4px 0 0;display:none;"></p>
+        {{-- TAB: KEAMANAN --}}
+        <div id="tab-keamanan" class="tab-content {{ session('tab') === 'keamanan' ? 'active' : '' }}">
+            <form action="{{ route('anggota.profil.update') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="tab" value="keamanan">
+
+                <div class="mb-3">
+                    <label class="form-label-sm">Password Lama</label>
+                    <input type="password" name="password_lama" class="input-field" placeholder="Masukkan password lama">
                 </div>
-                <input type="file" id="fotoInput" name="foto" accept="image/*" style="display:none;"
-                       onchange="document.getElementById('namaFile').textContent=this.files[0]?.name; document.getElementById('namaFile').style.display='block'">
-                @error('foto')<div style="font-size:12px;color:#dc3545;margin-top:4px;">{{ $message }}</div>@enderror
-            </div>
 
-            <div class="form-footer">
-                <a href="{{ url()->previous() }}" class="btn btn-light" style="font-size:13px;border-radius:10px;">Batal</a>
-                <button type="submit" class="btn-save">Simpan Perubahan</button>
-            </div>
+                <div class="form-row-2 mb-3">
+                    <div>
+                        <label class="form-label-sm">Password Baru</label>
+                        <input type="password" name="password" class="input-field" placeholder="Minimal 6 karakter">
+                    </div>
+                    <div>
+                        <label class="form-label-sm">Konfirmasi Password</label>
+                        <input type="password" name="password_confirmation" class="input-field" placeholder="Ulangi password baru">
+                    </div>
+                </div>
 
-        </form>
+                <div class="form-footer">
+                    <button type="submit" class="btn-save">Ubah Password</button>
+                </div>
+            </form>
+        </div>
+
     </div>
-
 </div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+    });
+});
+
+// Buka tab yang error otomatis
+@if($errors->any() && session('tab') === 'keamanan')
+    document.querySelector('[data-tab="tab-keamanan"]').click();
+@endif
+</script>
+
 @endsection

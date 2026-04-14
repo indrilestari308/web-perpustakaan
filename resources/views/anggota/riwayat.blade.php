@@ -111,21 +111,7 @@
 .empty-state i { font-size: 60px; margin-bottom: 16px; display: block; }
 </style>
 
-{{-- RINGKASAN --}}
-<div class="summary-row mb-3">
-    <div class="summary-item">
-        <p>Total Pinjaman</p>
-        <h6>{{ $riwayat->total() ?? 0 }} buku</h6>
-    </div>
-    <div class="summary-item">
-        <p>Total Denda Dibayar</p>
-        <h6>Rp {{ number_format($totalDendaDibayar ?? 0, 0, ',', '.') }}</h6>
-    </div>
-    <div class="summary-item">
-        <p>Pernah Terlambat</p>
-        <h6>{{ $pernahTerlambat ?? 0 }} kali</h6>
-    </div>
-</div>
+
 
 <div class="card-box">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -139,7 +125,6 @@
     <form method="GET" action="{{ route('anggota.riwayat') }}" class="filter-bar mb-4">
         <select name="status">
             <option value="">Semua Status</option>
-            <option value="dipinjam"     {{ request('status')=='dipinjam'     ? 'selected':'' }}>Dipinjam</option>
             <option value="dikembalikan" {{ request('status')=='dikembalikan' ? 'selected':'' }}>Dikembalikan</option>
             <option value="terlambat"    {{ request('status')=='terlambat'    ? 'selected':'' }}>Terlambat</option>
         </select>
@@ -191,21 +176,19 @@
                         @endif
                     </td>
                     <td>
-                        @if($item->status == 'dikembalikan' && $terlambatHari == 0)
-                            <span class="badge-status badge-dikembalikan">Dikembalikan</span>
-                        @elseif($terlambatHari > 0)
-                            <span class="badge-status badge-terlambat">Terlambat {{ $terlambatHari }}h</span>
-                        @else
-                            <span class="badge-status badge-dipinjam">Dipinjam</span>
-                        @endif
+                   <span class="badge-status badge-dikembalikan">Dikembalikan</span>
                     </td>
-                    <td>
-                        @if($denda > 0)
-                            <span class="denda-text">Rp {{ number_format($denda, 0, ',', '.') }}</span>
-                        @else
-                            <span class="denda-none">-</span>
-                        @endif
-                    </td>
+                        <td>
+                            @if($item->denda > 0)
+                                <div style="font-size:13px; font-weight:600; color:#e74c3c;">
+                                    Rp {{ number_format($item->denda, 0, ',', '.') }}
+                                </div>
+                                <div style="font-size:11px; color:#27ae60;">✓ Lunas</div>
+                            @else
+                                <span class="denda-none">Rp 0</span>
+                            @endif
+                        </td>
+
                 </tr>
                 @endforeach
             </tbody>

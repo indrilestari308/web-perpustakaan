@@ -101,7 +101,7 @@
         }
         .buku-cover {
             height: 140px;
-            overflow: hidden; 
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -336,7 +336,7 @@
         <div class="cara-card">
             <div class="cara-num">1</div>
             <h4>Daftar Akun</h4>
-            <p>Buat akun dengan NIS dan email sekolah kamu.</p>
+            <p>Buat akun dengan Nama email dan Password kamu.</p>
         </div>
         <div class="cara-card">
             <div class="cara-num">2</div>
@@ -367,15 +367,15 @@
     </div>
     <div class="tentang-grid">
         <div class="tentang-card">
-            <div class="tentang-num">2015</div>
+            <div class="tentang-num">2008</div>
             <div class="tentang-lbl">Tahun berdiri perpustakaan</div>
         </div>
         <div class="tentang-card">
-            <div class="tentang-num">1.200+</div>
+            <div class="tentang-num">+</div>
             <div class="tentang-lbl">Koleksi buku tersedia</div>
         </div>
         <div class="tentang-card">
-            <div class="tentang-num">Senin – Sabtu</div>
+            <div class="tentang-num">Senin – Jumat</div>
             <div class="tentang-lbl">Jam operasional 07.00 – 15.00</div>
         </div>
     </div>

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class AnggotaController extends Controller
 {
-    // 🔐 Middleware auth di constructor
+    // Middleware auth di constructor
     public function __construct()
     {
         // Semua method hanya untuk user login
@@ -30,11 +30,27 @@ class AnggotaController extends Controller
         $totalPinjaman  = $semuaPinjaman->count();
         $sedangDipinjam = $semuaPinjaman->where('status', 'dipinjam')->count();
         $sudahKembali   = $semuaPinjaman->where('status', 'dikembalikan')->count();
-        $totalDenda     = $semuaPinjaman->sum('denda');
+        $totalDenda = $semuaPinjaman->sum(function ($item) {
+            // Buku sudah selesai → pakai denda dari DB
+            if ($item->status === 'dikembalikan') {
+                return $item->denda;
+            }
 
-        $peminjaman = \App\Models\Peminjaman::with('buku')
+            // Buku masih dipinjam/terlambat → hitung realtime
+            if (in_array($item->status, ['dipinjam', 'menunggu_kembali'])) {
+                $batas = \Carbon\Carbon::parse($item->batas_kembali)->startOfDay();
+                $hari  = \Carbon\Carbon::today()->gt($batas)
+                    ? (int) $batas->diffInDays(\Carbon\Carbon::today())
+                    : 0;
+                return $hari * 1000;
+            }
+
+            return 0;
+        });
+
+        $peminjamanAktif = \App\Models\Peminjaman::with('buku')
             ->where('user_id', $userId)
-            ->whereIn('status', ['menunggu', 'dipinjam', 'menunggu_kembali'])
+            ->whereIn('status', ['dipinjam', 'menunggu_kembali'])
             ->orderBy('tanggal_pinjam', 'desc')
             ->get();
 
@@ -50,14 +66,7 @@ class AnggotaController extends Controller
             'sedangDipinjam',
             'sudahKembali',
             'totalDenda',
-            'peminjaman', // 🔥 HARUS INI
-            'riwayatTerakhir'
-        ));return view('anggota.dashboard', compact(
-            'totalPinjaman',
-            'sedangDipinjam',
-            'sudahKembali',
-            'totalDenda',
-            'peminjaman', // 🔥 HARUS INI
+            'peminjamanAktif',
             'riwayatTerakhir'
         ));
     }
@@ -100,35 +109,24 @@ public function updateProfil(Request $request)
     $tab  = $request->input('tab', 'profil');
 
     if ($tab === 'profil') {
-
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'foto'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ], [
-            'name.required'  => 'Nama wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
-            'email.unique'   => 'Email sudah digunakan akun lain.',
-            'foto.image'     => 'File harus berupa gambar.',
-            'foto.max'       => 'Ukuran foto maksimal 2MB.',
         ]);
 
         $user->name  = $request->name;
         $user->email = $request->email;
 
         if ($request->hasFile('foto')) {
-            if ($user->foto) {
-                Storage::disk('public')->delete($user->foto);
-            }
+            if ($user->foto) Storage::disk('public')->delete($user->foto);
             $user->foto = $request->file('foto')->store('foto-profil', 'public');
         }
 
         $user->save();
-
-        return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
+        return redirect()->route('anggota.profil')->with('success', 'Profil berhasil diperbarui!')->with('tab', 'profil');
 
     } elseif ($tab === 'keamanan') {
-
         $request->validate([
             'password_lama' => 'required',
             'password'      => 'required|string|min:6|confirmed',
@@ -140,13 +138,13 @@ public function updateProfil(Request $request)
         ]);
 
         if (!\Hash::check($request->password_lama, $user->password)) {
-            return back()->withErrors(['password_lama' => 'Password lama tidak sesuai.'])->withInput();
+            return back()->withErrors(['password_lama' => 'Password lama tidak sesuai.'])
+                         ->withInput()->with('tab', 'keamanan');
         }
 
         $user->password = bcrypt($request->password);
         $user->save();
-
-        return redirect()->back()->with('success', 'Password berhasil diperbarui!');
+        return redirect()->route('anggota.profil')->with('success', 'Password berhasil diperbarui!')->with('tab', 'keamanan');
     }
 
     return redirect()->back();
@@ -177,10 +175,11 @@ public function pinjam($id)
 
     //SIMPAN SEBAGAI MENUNGGU
     Peminjaman::create([
-        'user_id' => Auth::id(),
-        'buku_id' => $id,
-        'tanggal_pinjam' => now(),
-        'status' => 'menunggu'
+        'user_id'        => Auth::id(),
+        'buku_id'        => $id,
+        'tanggal_pinjam' => null, // ← null dulu
+        'batas_kembali'  => null,
+        'status'         => 'menunggu'
     ]);
 
 
