@@ -10,7 +10,7 @@
 
 .dash-header {
     background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 60%, #1a8cff 100%);
-    border-radius: 20px;
+    border-radius: 5px;
     padding: 24px 32px;
     margin-bottom: 24px;
     position: relative;
@@ -37,7 +37,7 @@
 
 .stat-card {
     background: #fff;
-    border-radius: 16px;
+    border-radius: 5px;
     padding: 20px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     border: 1px solid #f0f4ff;
@@ -50,7 +50,7 @@
 
 .stat-card .s-icon {
     width: 44px; height: 44px;
-    border-radius: 12px;
+    border-radius: 5px;
     display: flex; align-items: center; justify-content: center;
     font-size: 20px;
     flex-shrink: 0;

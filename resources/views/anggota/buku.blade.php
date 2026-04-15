@@ -209,7 +209,7 @@
     background: #f4f6fb;
     color: #4e73df;
     border: 1px solid #dde3f0;
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 8px;
     font-size: 11.5px;
     font-weight: 600;
@@ -231,7 +231,7 @@
     background: #1a1a2e;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 8px;
     font-size: 11.5px;
     font-weight: 600;

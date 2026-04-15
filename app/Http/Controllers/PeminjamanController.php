@@ -245,8 +245,13 @@ public function konfirmasiPengembalian($id)
         $peminjaman->buku->increment('stok');
     }
 
-    return back()->with('success', 'Pengembalian dikonfirmasi.' .
-        ($denda > 0 ? ' | Denda: Rp ' . number_format($denda, 0, ',', '.') : ' | Tidak ada denda.')
-    );
-}
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('petugas.struk', [
+        'data' => $peminjaman
+    ]);
+
+    // 🔥 ukuran struk (58mm)
+    $pdf->setPaper([0, 0, 226.77, 600]); 
+
+    return $pdf->stream('struk.pdf');
+    }
 }

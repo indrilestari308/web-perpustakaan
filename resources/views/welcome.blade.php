@@ -120,7 +120,8 @@
         /* BUKU */
         .buku-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .buku-card { background: #fff; border: 1px solid #e8ecf0; border-radius: 14px; overflow: hidden; }
-        .buku-cover { height: 140px; display: flex; align-items: center; justify-content: center; }
+         .buku-cover { height: 280px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .buku-cover img { width: 100%; height: 100%; object-fit: cover; }
         .buku-cover svg { width: 36px; height: 36px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
         .buku-info { padding: 14px; }
         .buku-kat { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #2f6df6; margin-bottom: 4px; }
@@ -177,6 +178,33 @@
             .tentang-grid { grid-template-columns: 1fr; }
             .footer { flex-direction: column; gap: 8px; text-align: center; }
         }
+
+        .logo-sekolah {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            margin-left: 40px; /* jarak dari text */
+        }
+
+        .logo-sekolah img {
+            width: 270px;
+            height: 270px;
+            object-fit: contain;
+
+            background: rgb(3, 10, 34)
+            padding: 10px;
+            border-radius: 16px;
+
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+
+            transition: 0.5s;
+        }
+
+        /* efek hover biar keren */
+        .logo-sekolah img:hover {
+            transform: scale(1.08);
+        }
     </style>
 </head>
 
@@ -205,24 +233,13 @@
             <a href="#koleksi" class="btn-ghost">Lihat Koleksi</a>
         </div>
     </div>
-    <div class="hero-right">
-        <div class="stat-box accent">
-            <div class="stat-num">1.240</div>
-            <div class="stat-lbl">Total Koleksi Buku</div>
+
+     {{-- <div class=logo-sekolah>
+        <div>
+            <img src="{{ asset('img/logosmk.png')}}" alt="logosekolah"  ">
         </div>
-        <div class="stat-box">
-            <div class="stat-num">340</div>
-            <div class="stat-lbl">Anggota Aktif</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-num">87</div>
-            <div class="stat-lbl">Dipinjam Bulan Ini</div>
-        </div>
-        <div class="stat-box accent">
-            <div class="stat-num">12</div>
-            <div class="stat-lbl">Kategori Buku</div>
-        </div>
-    </div>
+    </div>  --}}
+
 </div>
 
 {{-- FITUR --}}
@@ -277,9 +294,9 @@
     <div class="buku-cover" style="background: {{ $c['bg'] }};">
         @if($buku->gambar)
             <img src="{{ asset('storage/' . $buku->gambar) }}"
-                 style="width:100%; height:100%; object-fit:cover;">
+                style="width:100%; height:100%; object-fit:cover; display:block;">
         @else
-            <svg viewBox="0 0 24 24" style="stroke: {{ $c['stroke'] }};">
+            <svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke: {{ $c['stroke'] }}; fill:none; stroke-width:1.5;">
                 <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
             </svg>
@@ -384,7 +401,7 @@
 {{-- CTA --}}
 <div class="cta-section">
     <h2>Siap menjelajahi koleksi buku?</h2>
-    <p>Bergabung bersama 340+ anggota aktif perpustakaan SMKN 3 Banjar.</p>
+    <p>Bergabung bersama anggota aktif perpustakaan SMKN 3 Banjar.</p>
     <a href="/register" class="btn-primary-hero" style="font-size: 15px; padding: 12px 32px;">
         Daftar Sekarang
     </a>

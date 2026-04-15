@@ -31,12 +31,12 @@ class AnggotaController extends Controller
         $sedangDipinjam = $semuaPinjaman->where('status', 'dipinjam')->count();
         $sudahKembali   = $semuaPinjaman->where('status', 'dikembalikan')->count();
         $totalDenda = $semuaPinjaman->sum(function ($item) {
-            // Buku sudah selesai → pakai denda dari DB
+            // Buku sudah dikembalikan → skip (anggap sudah lunas)
             if ($item->status === 'dikembalikan') {
-                return $item->denda;
+                return 0;
             }
 
-            // Buku masih dipinjam/terlambat → hitung realtime
+            // Buku masih dipinjam/menunggu kembali → hitung realtime
             if (in_array($item->status, ['dipinjam', 'menunggu_kembali'])) {
                 $batas = \Carbon\Carbon::parse($item->batas_kembali)->startOfDay();
                 $hari  = \Carbon\Carbon::today()->gt($batas)

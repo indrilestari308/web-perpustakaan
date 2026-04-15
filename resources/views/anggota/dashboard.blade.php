@@ -14,7 +14,7 @@
 
 .stat-card {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 5px;
     padding: 18px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
@@ -22,7 +22,7 @@
 .stat-icon {
     width: 38px;
     height: 38px;
-    border-radius: 10px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -50,7 +50,7 @@
 
 .rules-box {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 5px;
     border-left: 4px solid #4e73df;
     padding: 18px 22px;
     margin-bottom: 20px;
@@ -75,7 +75,7 @@
 
 .rule-item {
     background: #f8f9ff;
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 14px;
 }
 
@@ -94,7 +94,7 @@
 
 .section-card {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 5px;
     padding: 18px 22px;
     margin-bottom: 16px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -224,7 +224,7 @@
 {{-- ATURAN --}}
 <div class="rules-box">
     <div class="rules-title">
-        ℹ️ Aturan peminjaman
+        Aturan peminjaman
     </div>
     <div class="rules-grid">
         <div class="rule-item">

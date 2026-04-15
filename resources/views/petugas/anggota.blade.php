@@ -146,7 +146,7 @@
                                 data-foto="{{ $u->foto ? asset('storage/' . $u->foto) : '' }}"
                                 data-bergabung="{{ $u->created_at->format('d M Y') }}"
                                 data-total="{{ $u->peminjaman->count() }}"
-                                data-aktif="$pinjamAktif = $u->peminjaman->whereIn('status', ['dipinjam', 'terlambat', 'menunggu_kembali']);"
+                                data-aktif="{{ $pinjamAktif->count() }}"
                                 data-pinjaman="{{ $pinjamAktif->map(fn($p) => [
                                     'judul'   => $p->buku->judul,
                                     'kembali' => \Carbon\Carbon::parse($p->tanggal_kembali)->format('d M Y'),
